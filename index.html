@@ -5,6 +5,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<script type="text/javascript" src="js/Assembler.js"></script>
 		<script type="text/javascript" src="js/Opcode.js"></script>
+		<script type="text/javascript" src="js/Compiler.js"></script>
 		<script type="text/javascript">
 			window.onload = function(ev) {
 				ASM.init({
@@ -14,6 +15,7 @@
 						"btnClearOutput": ASM.onBtnClearOutputClick,
 						"btnClearMessages": ASM.onBtnClearMessagesClick,
 					},
+					compiler: new ASM.Compiler({}),
 					textId: "editor",
 					messagesId: "messages",
 					outputId: "output"
@@ -39,7 +41,6 @@
 				<div id="rightCenter">
 					<textarea id="output" placeholder="Output"></textarea>
 				</div>
-
 			</div>
 			<div id="bottomToolbar"></div>
 		</div>
