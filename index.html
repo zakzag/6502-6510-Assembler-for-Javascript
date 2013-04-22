@@ -3,7 +3,9 @@
 	<head>
 		<title></title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<script type="text/javascript" src="js/Util.js"></script>
 		<script type="text/javascript" src="js/Assembler.js"></script>
+		<script type="text/javascript" src="js/Directive.js"></script>
 		<script type="text/javascript" src="js/Opcode.js"></script>
 		<script type="text/javascript" src="js/Compiler.js"></script>
 		<script type="text/javascript">
@@ -15,34 +17,37 @@
 						"btnClearOutput": ASM.onBtnClearOutputClick,
 						"btnClearMessages": ASM.onBtnClearMessagesClick,
 					},
-					compiler: new ASM.Compiler({}),
 					textId: "editor",
 					messagesId: "messages",
 					outputId: "output"
 				});
+
+				console.info("demora");
 			}
 		</script>
 		<link rel="stylesheet" type="text/css" href="css/index.css" />
 	</head>
 	<body>
-		<div id="main">
-			<div id="header"><h1>6502 Assembler for PC</h1></div>
-			<div id="topToolbar">
-				<button id="btnCompile">Compile</button>
-				<button id="btnSaveAs">Save as..</button>
-				<button id="btnClearOutput">Clear output</button>
-				<button id="btnClearMessages">Clear messages</button>
-			</div>
-			<div id="center">
-				<div id="leftCenter">
-					<textarea id="editor" placeholder="type program here"></textarea>
-					<textarea id="messages" placeholder="Messages"></textarea>
+		<form action="" method="POST">
+			<div id="main">
+				<div id="header"><h1>6502 Assembler for PC</h1></div>
+				<div id="topToolbar">
+					<button id="btnCompile">Compile</button>
+					<button id="btnSaveAs">Save as..</button>
+					<button id="btnClearOutput">Clear output</button>
+					<button id="btnClearMessages">Clear messages</button>
 				</div>
-				<div id="rightCenter">
-					<textarea id="output" placeholder="Output"></textarea>
+				<div id="center">
+					<div id="leftCenter">
+						<textarea id="editor" name="editor" placeholder="type program here"></textarea>
+						<textarea id="messages" name="messages" placeholder="Messages"></textarea>
+					</div>
+					<div id="rightCenter">
+						<textarea id="output" placeholder="Output"></textarea>
+					</div>
 				</div>
+				<div id="bottomToolbar"></div>
 			</div>
-			<div id="bottomToolbar"></div>
-		</div>
+		</form>
 	</body>
 </html>
