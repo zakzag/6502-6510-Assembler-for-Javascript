@@ -73,13 +73,13 @@ div#topToolbar button {
 	display: inline-block;
 	width: 70%;
 	float: left;
-	height: 500px;
+	height: 300px;
 }
 
 #center #rightCenter {
 	display: inline-block;
 	width:30%;
-	height: 500px;
+	height: 300px;
 }
 
 #center #editor {

@@ -12,25 +12,10 @@ ASM.Compiler = (function() {
 		RX_OPCODE = /[a-zA-Z]{3}/i,
 		RX_DIRECTIVE = /\.\w+/i,
 		RX_EXPRESSION_SPLITTER = /[+\-*]/i,
-		RX_LINESPLITTER = /^\s*([^:]*?:)*\s*([a-zA-Z_][a-zA-Z0-9]*\s*=|\w{1,4}|\.\w+|\*\s*=){0,1}\s*([^;\s]*)*\s*(;.*)*$/i;
+		RX_EMPTYLINE = /^\s*$/i,
+		RX_LINESPLITTER = /^(?:([^:]*?):)?([^;]*);?(.*)*?$/i,
+		RX_CODESPLITTER = /^\s*((?:[a-zA-Z_][a-zA-z0-9]*?|\*)\s*=|[a-zA-Z]{3}|\.[a-zA-Z]*)\s*(.*)$/i
 
-		DIRECTIVES = {
-			byte: {
-				name: "byte",
-				rx: /^[^,]*(,[^,]+)*$/gi,
-				fn: function(str) {
-					if (!str.match(rx)) {
-						throw new Error("Invalid byte directive");
-					}
-
-					//
-				}
-			},
-			word: {
-				name: "word",
-
-			}
-		}
 
 	return Util.extend(Object, {
 		constructor: function(config) {
@@ -42,8 +27,6 @@ ASM.Compiler = (function() {
 		init: function(config) {
 			this.config = config;
 
-			this.lines = [];
-			this.labels = {};
 			this.defaultStart = config.defaultStart || 0x1000;
 			this.scope = config.scope || this;
 			this.messagesCb = config.messagesCb || function() {};
@@ -51,6 +34,8 @@ ASM.Compiler = (function() {
 		},
 
 		compile: function(text) {
+			console.clear();
+			this.labels = {};
 			this.lines = text.split("\n");
 			this.pc = this.defaultStart;
 			this.data = [];
@@ -62,17 +47,20 @@ ASM.Compiler = (function() {
 		// pass #1 collecting labels
 		pass1: function() {
 			for (var i = 0, len = this.lines.length; i < len; i++) {
-				var parts = this.evalLine(this.lines[i], i),
-					data = {
-						line: this.lines[i],
-						pc: undefined,
-						parts: parts
-					}
+				var line = this.lines[i],
+					parts = this.evalLine(line, i),
+					labelName;
 
-				this.data[i] = data;
+				this.data[i] = {
+					line: line,
+					pc: undefined,
+					length: undefined,
+					empty: parts.empty,
+					parts: parts
+				};
 
-				if (typeof parts.label != "undefined") {
-					var labelName = parts.label;
+				if (parts.label !== undefined) {
+					labelName = parts.label;
 
 					if (this.labels[labelName]) {
 						throw new Error("Duplicate label: ", labelName, "");
@@ -81,29 +69,67 @@ ASM.Compiler = (function() {
 					this.labels[labelName] = { line: i, length: 2 }   // all the program labels have 2bytes  length
 				}
 			}
-
-			console.info(this.labels);
 		},
 
 		// collection constants
 		pass2: function() {
 			for (var i = 0, len = this.data.length; i < len; i++) {
-				console.info(i);
+				var lineData = this.data[i];
+
+				console.info(lineData);
 			}
+		},
+		isEmptyLine: function(line) {
+			return line.match(RX_EMPTYLINE);
+		},
+
+		getCode: function() {
+			//
 		},
 
 		evalLine: function(line, num) {
-			var parts = RX_LINESPLITTER.exec(line);
-			if (!parts) {
-				this.log("syntax error at line #"+ num);
-				throw new Error("syntax error at " + num);
+			if (this.isEmptyLine(line)) {
+				return {
+					label: undefined,
+					opcode: undefined,
+					args: undefined,
+					comment: undefined,
+					empty: true
+				}
+			}
+			else {
+				var parts = RX_LINESPLITTER.exec(line),
+					codeParts;
+
+				if (parts === null) {
+					this.log("syntax error at line #"+ num);
+					throw new Error("Syntax error at " + num);
+				}
+
+				codeParts = this.splitCode(parts[2], num);
+
+				return {
+					label: parts[1],
+					opcode: codeParts.code,
+					args: codeParts.args,
+					comment: parts[4],
+					empty: false
+				}
+			}
+
+		},
+
+		splitCode: function(str, num) {
+			var codeParts = RX_CODESPLITTER.exec(str);
+
+			if (codeParts === null) {
+				this.log("syntax error: line is neither an opcode nor an assignment");
+				throw new Error("syntax error in #"+num+": line is neither an opcode nor an assignment")
 			}
 
 			return {
-				label: parts[1],
-				opcode: parts[2],
-				args: parts[3],
-				comment: parts[4]
+				code: codeParts[1],
+				args: codeParts[2]
 			}
 		},
 
