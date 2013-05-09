@@ -3,19 +3,21 @@
 	<head>
 		<title></title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<script type="text/javascript" src="js/ASM.js"></script>
 		<script type="text/javascript" src="js/Util.js"></script>
+		<script type="text/javascript" src="js/Error.js"></script>
 		<script type="text/javascript" src="js/Assembler.js"></script>
 		<script type="text/javascript" src="js/Directive.js"></script>
 		<script type="text/javascript" src="js/Opcode.js"></script>
 		<script type="text/javascript" src="js/Compiler.js"></script>
 		<script type="text/javascript">
 			window.onload = function(ev) {
-				ASM.init({
+				ASM.Assembler.init({
 					buttons: {
-						"btnCompile": ASM.onBtnCompileClick,
-						"btnSaveAs": ASM.onBtnSaveAsClick,
-						"btnClearOutput": ASM.onBtnClearOutputClick,
-						"btnClearMessages": ASM.onBtnClearMessagesClick,
+						"btnCompile": ASM.Assembler.onBtnCompileClick,
+						"btnSaveAs": ASM.Assembler.onBtnSaveAsClick,
+						"btnClearOutput": ASM.Assembler.onBtnClearOutputClick,
+						"btnClearMessages": ASM.Assembler.onBtnClearMessagesClick,
 					},
 					textId: "editor",
 					messagesId: "messages",

@@ -2,7 +2,7 @@
  * Possible statements, opcodes, addressing modes etc.
  *
  * A single line consists:
- * [[label[:]] [(opcode|directive) [arguments]]] [; comment]
+ * [[label[:]] [(opcode|directive|assignment) [arguments]]] [; comment]
  *
  * LIST OF DIRECTIVES
  *
@@ -54,12 +54,12 @@
  *  EXPRESSION
  *  - label (translated as memory addresses)    loop1 -> $12ee
  *  - scalar number:  decimal: 100, hex: $44, binary: %11111100
- *  - operators: + - * /
+ *  - operators: + - 
  *  - hi/lo byte: < , >
  *
  */
 (function() {
-	Util.apply(ASM, {
+	ASM.Util.apply(ASM, {
 		Opcodes: {
 		/* Name: { IMM,  ZP,   ZPX,  ZPY,  ABS,  ABSX, ABSY, INDX, INDY, IMP,  REL   IND   */
 			ADC: [ 0x69, 0x65, 0x75, 0x00, 0x6d, 0x7d, 0x79, 0x61, 0x71, 0x00, 0x00, 0x00  ],

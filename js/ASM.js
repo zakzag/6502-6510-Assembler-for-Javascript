@@ -1,0 +1,3 @@
+ASM= (function() {
+	return {};
+})();

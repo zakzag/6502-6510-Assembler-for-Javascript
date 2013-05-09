@@ -6,15 +6,16 @@
  * ASM is a namespace for all the objects and classes used in this project.
  * All of them is under ASM, so the compiler is called ASM.Compiler
  *
- * ASM handles all events from the user interface, sends commands to the child
+ * ASM.Assember handles all events from the user interface, sends commands to the child
  * objects (Opcode, Compiler so far) and listens to them (using callback
  * functions). Later on it is possible to switch to Observable pattern to make it
  * be more OOP-like project.
  *
- *
+ * So far only works with chrome, mozilla, opera and safari, since IE has no attachEvent. 
+ * Too lazy to implement cross-browser event handling
  */
 
-ASM = (function() {
+ASM.Assembler = (function() {
 	return {
 		init: function(config) {
 			for (var buttonId in config.buttons) {
@@ -65,6 +66,13 @@ ASM = (function() {
 
 		onMessage: function(msg) {
 			this.messagesEl.value += this.messagesEl.value + "\n"+ msg;
+		},
+				
+		log: function() {
+			var fn = this.messagesCb ? this.messagesCb.bind(this.scope) : console.info;
+			for (var i= 0, len = arguments.length; i < len; i++ ) {
+				fn(arguments[i]);
+			}
 		}
 	}
 })();

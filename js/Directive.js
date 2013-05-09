@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 ASM.Directive = (function() {
-	return Util.extend(Object, {
+	return ASM.Util.extend(Object, {
 		constructor: function(name) {
 			this.name = name;
 			this.rx = /^.*$/gi;
@@ -24,9 +24,9 @@ ASM.Directive = (function() {
 
 ASM.directive = {};
 
-ASM.directive.String = Util.extend(ASM.Directive, {
+ASM.directive.String = ASM.Util.extend(ASM.Directive, {
 	rx: /s/
 });
-ASM.directive.Byte = Util.extend(ASM.Directive, {});
-ASM.directive.Word = Util.extend(ASM.Directive, {});
-ASM.directive.End = Util.extend(ASM.Directive, {});
+ASM.directive.Byte = ASM.Util.extend(ASM.Directive, {});
+ASM.directive.Word = ASM.Util.extend(ASM.Directive, {});
+ASM.directive.End = ASM.Util.extend(ASM.Directive, {});

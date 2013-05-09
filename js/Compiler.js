@@ -11,13 +11,13 @@ ASM.Compiler = (function() {
 		RX_LABEL_DEF = /[a-zA-Z_][a-zA-Z0-9]*\s*=\s*/i,
 		RX_OPCODE = /[a-zA-Z]{3}/i,
 		RX_DIRECTIVE = /\.\w+/i,
-		RX_EXPRESSION_SPLITTER = /[+\-*]/i,
+		RX_EXPRESSION_SPLITTER = /[+\-]/i,
 		RX_EMPTYLINE = /^\s*$/i,
 		RX_LINESPLITTER = /^(?:([^:]*?):)?([^;]*);?(.*)*?$/i,
 		RX_CODESPLITTER = /^\s*((?:[a-zA-Z_][a-zA-z0-9]*?|\*)\s*=|[a-zA-Z]{3}|\.[a-zA-Z]*)\s*(.*)$/i
 
 
-	return Util.extend(Object, {
+	return ASM.Util.extend(Object, {
 		constructor: function(config) {
 			this.init(config);
 		},
@@ -140,12 +140,9 @@ ASM.Compiler = (function() {
 		evalExpression: function(expression) {
 
 		},
-
-		log: function() {
-			var fn = this.messagesCb ? this.messagesCb.bind(this.scope) : console.info;
-			for (var i= 0, len = arguments.length; i < len; i++ ) {
-				fn(arguments[i]);
-			}
+				
+		throwError: function(type, message) {
+			
 		}
 	});
 })();
