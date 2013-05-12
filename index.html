@@ -43,7 +43,24 @@
 					<div id="leftCenter">
 						<textarea id="editor" name="editor" placeholder="type program here">
 *=$1000
-loop1:pass = * + * + 2;helloka
+loop1:pass = * + * + 2 + loop1 ;helloka
+store:dd= 1 + &lt;$100 - &gt;%1000000010010011 + &lt;loop1 - &lt;* + 10000;kukori 
+lda $01
+sta $02
+ror 
+rol 1
+ldx #12
+lda ($fd),y
+lda ($fd,x)
+ldy #%11111111
+tax
+dex
+bne loop1
+rts
+.byte &gt;*, &lt;*, 100,200, $400, %10001000
+.word *, loop1, &gt;loop1
+strings:.string "helloka"
+
 						</textarea>
 						<textarea id="messages" name="messages" placeholder="Messages"></textarea>
 					</div>
