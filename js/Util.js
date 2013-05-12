@@ -1,6 +1,6 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Basic functions for the assembler. Implements inheritance and
+ * object shallow copy
  */
 ASM.Util = (function() {
     var UtilClass = {
@@ -62,7 +62,7 @@ ASM.Util = (function() {
 
                 return sb;
             };
-        }(),
+        }(),	
         override: function(origclass, overrides) {
             if (overrides) {
                 var p = origclass.prototype;
