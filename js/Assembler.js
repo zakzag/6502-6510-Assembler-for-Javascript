@@ -24,7 +24,6 @@ ASM.Assembler = (function() {
 				buttonEl.addEventListener("click", button.bind(this));
 			}
 			this.compiler = config.compiler || new ASM.Compiler({
-				messagesCb: this.onMessage,
 				scope: this
 			});
 			this.textEl = document.getElementById(config.textId);
@@ -33,7 +32,16 @@ ASM.Assembler = (function() {
 		},
 
 		compile: function() {
-			this.compiler.compile(this.textEl.value);
+			try {
+				this.compiler.compile(this.textEl.value);
+			} catch(e) {
+				if (e instanceof ASM.Error) {
+					//this.log(e.message)
+					console.info(e.message);
+				} else {
+					throw e;
+				}
+			}
 		},
 
 		clearMessages: function() {
