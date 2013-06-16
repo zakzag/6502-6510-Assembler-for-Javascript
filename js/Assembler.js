@@ -24,24 +24,27 @@ ASM.Assembler = (function() {
 				buttonEl.addEventListener("click", button.bind(this));
 			}
 			this.compiler = config.compiler || new ASM.Compiler({
-				scope: this
+				scope: this,
+				opcodes: ASM.Opcode,
+				directives: ASM.Directive
 			});
+			
 			this.textEl = document.getElementById(config.textId);
 			this.messagesEl = document.getElementById(config.messagesId);
 			this.outputEl = document.getElementById(config.outputId);
 		},
 
 		compile: function() {
-			try {
+			//try {
 				this.compiler.compile(this.textEl.value);
-			} catch(e) {
-				if (e instanceof ASM.Error) {
-					//this.log(e.message)
-					console.info(e.message);
-				} else {
-					throw e;
-				}
-			}
+			//} catch(e) {
+				//if (e instanceof ASM.Error) {
+					//this.log(e.message);
+					//console.warn(e.stack);
+				//} else {
+					//throw e;
+				//}
+			//}
 		},
 
 		clearMessages: function() {
@@ -77,9 +80,10 @@ ASM.Assembler = (function() {
 		},
 				
 		log: function() {
-			var fn = this.messagesCb ? this.messagesCb.bind(this.scope) : console.info;
+			//var fn = this.messagesCb ? this.messagesCb.bind(this.scope) : console.info;
+			
 			for (var i= 0, len = arguments.length; i < len; i++ ) {
-				fn(arguments[i]);
+				console.info(arguments[i]);
 			}
 		}
 	}

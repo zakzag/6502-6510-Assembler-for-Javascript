@@ -23,7 +23,6 @@ ASM.Directive = (function() {
 })();
 
 ASM.directive = {};
-
 ASM.directive.String = ASM.Util.extend(ASM.Directive, {
 	rx: /s/
 });

@@ -23,8 +23,6 @@
 					messagesId: "messages",
 					outputId: "output"
 				});
-
-				console.info("demora");
 			}
 		</script>
 		<link rel="stylesheet" type="text/css" href="css/index.css" />
@@ -42,9 +40,12 @@
 				<div id="center">
 					<div id="leftCenter">
 						<textarea id="editor" name="editor" placeholder="type program here">
-*=$1000
+start:*=$1000; cannot have any identifier only numbers
 loop1:pass = * + * + 2 + loop1 ;helloka
-store:dd= 1 + &lt;$100 - &gt;%1000000010010011 + &lt;loop1 - &lt;* + 10000;kukori 
+var2 = 1
+var3 = 1+2+*
+var4 = $100
+store:dd= 1 + $100 - %1000000010010011 + loop1 - * + 10000;kukori 
 lda $01
 sta $02
 ror 
@@ -55,6 +56,10 @@ lda ($fd,x)
 ldy #%11111111
 tax
 dex
+lda loop1
+lda var2
+lda var4
+lda store
 bne loop1
 rts
 .byte &gt;*, &lt;*, 100,200, $400, %10001000

@@ -4,6 +4,14 @@
  */
 ASM.Util = (function() {
     var UtilClass = {
+		/**
+		 * Shallow copy 
+		 * 
+		 * @param {Object} o         
+		 * @param {Object} c
+		 * @param {Object} defaults
+		 * @returns {Object}
+		 */
         apply: function(o, c, defaults) {
             // no "this" reference for friendly out of scope calls
             if (defaults) {
