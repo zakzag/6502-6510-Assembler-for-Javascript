@@ -18,8 +18,6 @@
  *     loads a file as a source file and parses it.
  * .resource "<filename>"
  *     loads a file as a resource (ie. image, font etc.).
- * .set <name> = <expr>
- *     creates a symbol having the value as described in expr
  * .end
  *     marks the end of the source.
  *
@@ -60,7 +58,7 @@
  */
 (function() {
 	ASM.Util.apply(ASM, {
-		Opcodes: {
+		Opcode: {
 		/* Name: { IMM,  ZP,   ZPX,  ZPY,  ABS,  ABSX, ABSY, INDX, INDY, IMP,  REL   IND   */
 			ADC: [ 0x69, 0x65, 0x75, 0x00, 0x6d, 0x7d, 0x79, 0x61, 0x71, 0x00, 0x00, 0x00  ],
 			AND: [ 0x29, 0x25, 0x35, 0x00, 0x2d, 0x3d, 0x39, 0x21, 0x31, 0x00, 0x00, 0x00  ],
@@ -123,62 +121,74 @@
 			IMM: {
 				shortName: "IMM",
 				name: "Immediate",
-				length: 1
+				length: 1,
+				index: 0
 			},
 			ZP: {
 				shortName: "ZP",
 				name: "Zero page",
-				length: 2
+				length: 2,
+				index: 1
 			},
 			ZPX: {
 				shortName: "ZPX",
 				name: "Zero page, x",
-				length: 2
+				length: 2,
+				index: 2
 			},
 			ZPY: {
 				shortName: "ZPY",
 				name: "Zero page, y",
-				length: 2
+				length: 2,
+				index: 3
 			},
 			ABS: {
 				shortName: "ABS",
 				name: "Absolute",
-				length: 3
+				length: 3,
+				index: 4
 			},
 			ABSX: {
 				shortName: "ABSX",
 				name: "Absolute, x",
-				length: 2
+				length: 2,
+				index: 5
 			},
 			ABSY: {
 				shortName: "ABSY",
 				name: "Absolute, y",
-				length: 2
+				length: 2,
+				index: 6
 			},
 			INDX: {
 				shortName: "INDX",
 				name: "Indexed Indirect, x",
-				length: 2
+				length: 2,
+				index: 7
 			},
 			INDY: {
 				shortName: "INDY",
 				name: "Indirect Indexed, y",
-				length: 2
+				length: 2,
+				index: 8
 			},
 			IMP: {
 				shortName: "IMP",
 				name: "Implicit",
-				length: 1
+				length: 1,
+				index: 9
 			},
 			REL: {
 				shortName: "REL",
 				name: "Relative",
-				length: 2
+				length: 2,
+				index: 10
 			},
 			IND: {
 				shortName: "IND",
 				name: "Indirect",
-				length: 3
+				length: 3,
+				index: 11
 			}
 		}
 	});
