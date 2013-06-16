@@ -40,31 +40,73 @@
 				<div id="center">
 					<div id="leftCenter">
 						<textarea id="editor" name="editor" placeholder="type program here">
-start:*=$1000; cannot have any identifier only numbers
-loop1:pass = * + * + 2 + loop1 ;helloka
-var2 = 1
-var3 = 1+2+*
-var4 = $100
-store:dd= 1 + $100 - %1000000010010011 + loop1 - * + 10000;kukori 
-lda $01
-sta $02
-ror 
-rol 1
-ldx #12
-lda ($fd),y
-lda ($fd,x)
-ldy #%11111111
-tax
-dex
-lda loop1
-lda var2
-lda var4
-lda store
-bne loop1
-rts
-.byte &gt;*, &lt;*, 100,200, $400, %10001000
-.word *, loop1, &gt;loop1
-strings:.string "helloka"
+*= $C000
+
+org: 
+	ldx  #99
+bloop: 
+	jsr xout
+	lda	#<bobot
+	ldy	#28
+	jsr	strout
+	lda	#<comcr
+	ldy	#2
+	jsr	strout
+	jsr	xout
+	lda	#<bobot
+	ldy	#16
+	jsr	strout
+	lda	#<bobpa
+	ldy	#33
+	jsr	strout
+	dex
+	jsr	xout
+	lda	#<bobot
+	ldy	#28
+	jsr	strout
+	lda	#<bobpa
+	ldy	#2
+	jsr	strout
+	txa
+	bne	bloop
+	lda	#<endtx
+	ldy	#37
+	jsr	strout
+	lda	#<bobot
+	ldy	#30
+strout: 
+	sta ldins+1
+ldins: 
+	lda org
+	jsr	$ffd2
+	inc	ldins+1
+	dey
+	bne	ldins
+outdon: 
+	rts
+
+xout: 
+	txa
+	pha
+	lda	#0
+	jsr	$bdcd
+	pla
+	tax
+	rts
+
+bobot: 
+	.text " BOTTLES OF BEER ON THE WALL"
+bobpa: 
+	.text "."
+	.byte	13
+	.text	"TAKE ONE DOWN, PASS IT AROUND,"
+	.byte	13
+endtx: 
+	.text "GO TO THE STORE AND BUY SOME MORE"
+comcr: 
+	.text ","
+	.byte	13
+	.text	"99"
 
 						</textarea>
 						<textarea id="messages" name="messages" placeholder="Messages"></textarea>

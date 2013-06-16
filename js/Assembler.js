@@ -25,9 +25,10 @@ ASM.Assembler = (function() {
 			}
 			this.compiler = config.compiler || new ASM.Compiler({
 				scope: this,
-				opcodes: ASM.Opcode,
-				directives: ASM.Directive
+				opcodes: ASM.Opcode
 			});
+			
+			this.compiler.addDirective("text", new ASM.directive.Text(this.compiler));
 			
 			this.textEl = document.getElementById(config.textId);
 			this.messagesEl = document.getElementById(config.messagesId);
