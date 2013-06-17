@@ -124,29 +124,48 @@ ASM.Compiler = (function() {
 					pc: this.pc,           // program counter in the line
 					length: undefined,     // how long as a machine code
 					type: parts.type,      // is this an empty line?
-					directiveData: undefined,
+					directiveData: undefined, // only set, when directive present in the current line
 					opcodeData: undefined, // only set, when opcode is present in the current line
 					parts: parts,          // part of the line, separated by function
 					code: undefined        // actual machine code
 				};
 				
+				// call the function according to the line type
 				fnName = "pass0" + parts.type;
 				this[fnName] && this[fnName](lineData);
 			}
 			console.groupEnd("pass0");
 		},
 				
+		/**
+		 * if * found, set PC
+		 * @param {object} lineData
+		 * 
+		 * @returns {undefined}
+		 */
 		pass0PC: function(lineData) {
 			console.info("set PC to ",this.evalExpression(lineData.parts.args).value);
 			this.pc = lineData.pc = this.evalExpression(lineData.parts.args).value;
 		},
+		/**
+		 * Identifier resolution, pass0. Identifier not necesserily resolved,
+		 * but its length is defined  (for pass1)
+		 * 
+		 * @param {type} lineData
+		 * @returns {undefined}
+		 */
 		pass0Assignment: function(lineData) {
 			var expressionData = this.evalExpression(lineData.parts.args);
 			var label = RX_IDENTIFIER.exec(lineData.parts.code)[1]
 			this.setIdentifier(label, expressionData.value, expressionData.length, lineData.parts.args);
 		},
 		
-		// calculate opcode lengths
+		/**
+		 * Pass1: calculates opcode lengths, so all the identifiers will be
+		 *        resolvable including labels.
+		 *        
+		 * @returns {undefined}
+		 */
 		pass1: function() {
 			console.groupCollapsed("pass1")
 			var fnName,
@@ -165,26 +184,43 @@ ASM.Compiler = (function() {
 				
 				fnName = "pass1" + lineData.parts.type;
 				this[fnName] && this[fnName](lineData);
+				
+				// TODO: pass1Directive-t megcsinalni, mert a directive utani labelek nem lesznek jok;
 			}
 			console.groupEnd("pass1")
 		},
+		/**
+		 * Pass1 sub: sets the program counter
+		 * 
+		 * @param {object} lineData
+		 * @returns {undefined}
+		 */
 		pass1PC: function(lineData) {
 			console.info("set PC to ",this.evalExpression(lineData.parts.args).value);
 			lineData.pc = this.pc;
 			this.pc = this.evalExpression(lineData.parts.args).value;
 		},
-				
+		/**
+		 * Pass1 sub: Processes opcode
+		 * 
+		 * @param {type} lineData
+		 * @returns {undefined}
+		 */
 		pass1Opcode: function(lineData) {
 			var opcodes = this.opcodes,
 				opcode = lineData.parts.code.toUpperCase(),
 				args = lineData.parts.args;
 		
 			var opcodeData = this.getOpcodeData(opcode, args);
-			console.info(this.pc, opcodeData);
 			lineData.opcodeData = opcodeData;
 			this.pc +=  opcodeData.length;
 		},
-				
+		
+		/**
+		 * Pass2: resolves all identifiers, stops when unable to do it.
+		 * 
+		 * @returns {undefined}
+		 */
 		pass2: function() {
 			console.groupCollapsed("pass2");
 			for (var identifierName in this.identifiers) {
@@ -199,7 +235,10 @@ ASM.Compiler = (function() {
 			}
 			console.groupEnd("pass2");
 		},
-				
+		/**
+		 * Pass3: finalize opcode arguments (replaces identifiers resolved in pass2)
+		 * @returns {undefined}
+		 */		
 		pass3: function() {
 			console.group("pass3");
 			var fnName,
@@ -216,12 +255,23 @@ ASM.Compiler = (function() {
 			}
 			console.groupEnd("pass3");
 		},
-		
+		/**
+		 * Pass3: sets program counter
+		 * 
+		 * @param {object} lineData
+		 * @returns {undefined}
+		 */
 		pass3PC: function(lineData) {
 			lineData.pc = this.pc;
 			this.pc = this.evalExpression(lineData.parts.args).value;
 		},
 				
+		/**
+		 * Pass3 sub: processes an opcode
+		 * 
+		 * @param {type} lineData
+		 * @returns {undefined}
+		 */
 		pass3Opcode: function(lineData) {
 			var opcodes = this.opcodes,
 				opcode = lineData.parts.code.toUpperCase(),
@@ -232,6 +282,12 @@ ASM.Compiler = (function() {
 			this.pc +=  opcodeData.length;
 		},
 				
+		/**
+		 * Pass3: 
+		 * 
+		 * @param {type} lineData
+		 * @returns {undefined}
+		 */
 		pass3Directive: function(lineData) {
 			var directiveClassName = lineData.parts.code.substr(1);
 			var directive = this.directives[directiveClassName];
@@ -250,7 +306,11 @@ ASM.Compiler = (function() {
 				// error handling: no such directive installed
 			}
 		},
-		// create output	
+		/**
+		 * Pass4: Creates output data
+		 * 
+		 * @returns {unresolved}
+		 */
 		pass4: function() {
 			var output = [],
 				lineData,
@@ -267,17 +327,31 @@ ASM.Compiler = (function() {
 			
 			return this.output;
 		},
-			
+		/**
+		 * Pass4 sub: get&add Opcode data
+		 * @param {type} lineData
+		 * @returns {undefined}
+		 */
 		pass4Opcode: function(lineData) {
 			console.info(">>>>>", lineData.opcodeData.data);
 			this.output = this.output.concat(lineData.opcodeData.data)
 		},
-				
+		/**
+		 * Pass4 sub: get&add Directive data
+		 * @param {type} lineData
+		 * @returns {undefined}
+		 */
 		pass4Directive: function(lineData) {
 			console.info(">>>>>", lineData.directiveData.data);
 			this.output = this.output.concat(lineData.directiveData.data)
 		},
-				
+		/**
+		 * Processes opcode (evaluates expressions, calculates addressing mode, opcode length)
+		 * 
+		 * @param {string} opcode
+		 * @param {string} args
+		 * @returns {Object} opcode internal data
+		 */
 		getOpcodeData: function(opcode, args) {
 			var addressingModeData = this.getAddressingMode(opcode, args),
 				addressingMode = addressingModeData.type,
@@ -338,6 +412,13 @@ ASM.Compiler = (function() {
 
 			return result;
 		},
+		/**
+		 * Calculates addressing mode and opcode length
+		 * 
+		 * @param {string} code
+		 * @param {arg} arg
+		 * @returns {object}
+		 */
 		getAddressingMode: function(code, arg) {
 			var matchIMP = arg.match(RX_ADDRTYPE_IMP),
 				matchIMM = arg.match(RX_ADDRTYPE_IMM),
@@ -389,7 +470,12 @@ ASM.Compiler = (function() {
 				(RX_OPCODE_TYPE.exec(body) ? TYPE_OPCODE : 
 				(RX_EMPTY_TYPE.exec(body)? TYPE_EMPTY : TYPE_UNDEFINED))));
 		},
-				
+		/**
+		 * Processes a line by splitting into chunks and organizes into a hash
+		 * 
+		 * @param {string} line
+		 * @returns {object}   line metainfo
+		 */
 		splitLine: function(line) {
 			if (this.isEmptyLine(line)) {
 				return {
@@ -420,7 +506,11 @@ ASM.Compiler = (function() {
 				};
 			};
 		},
-
+		/**
+		 * Processes code part of a line (for assignment, opcode, directive types)
+		 * @param {string} str
+		 * @returns {object}  code metainfo
+		 */
 		splitCode: function(str) {
 			if (this.isEmptyLine(str)) {
 				return {
@@ -441,6 +531,12 @@ ASM.Compiler = (function() {
 			}
 		},
 
+		/**
+		 * Evaluates an expression. If it is impossible, at least its length
+		 * 
+		 * @param {string} expression
+		 * @returns {object} expression metadata
+		 */
 		evalExpression: function(expression) {
 			var exprParts = expression.trim().split(RX_EXPRESSION_SPLITTER),
 				operators = expression.match(RX_OPERATOR_COLLECTOR),
@@ -474,21 +570,45 @@ ASM.Compiler = (function() {
 			console.info("expression: ", expression, "eval'd as ", resultData); 
 			return resultData;
 		},
-		
+		/**
+		 * Whether expression has < or > (so the expression is 1 byte long)
+		 * @param {type} expr
+		 * @returns {unresolved}
+		 */
 		getHiLoSelector: function(expr) {
 			var firstChar = expr[0];
 			
 			return (firstChar === "<" || firstChar === ">");
 		},
-				
+		/**
+		 * Add operator method
+		 * 
+		 * @param {number} op1
+		 * @param {number} op2
+		 * @returns {number}
+		 */
 		operatorAdd: function(op1, op2) {
 			return op1 + op2;
 		},
-				
+		
+		/**
+		 * Substract operator method
+		 * 
+		 * @param {number} op1
+		 * @param {number} op2
+		 * @returns {number}
+		 */
 		operatorSub: function(op1, op2) {
 			return op1 - op2;
 		},
 		
+		/**
+		 * Evaluates a value, called by evalExpression, replaces identifiers
+		 * to its value if possible, also calculates value length
+		 * 
+		 * @param {string} value
+		 * @returns {object}  value metadata
+		 */
 		evalValue: function(value) {
 			var valueParts = RX_VALUE_SPLITTER.exec(value),
 				result,
@@ -533,6 +653,18 @@ ASM.Compiler = (function() {
 				length: length
 			}
 		},
+				
+		/**
+		 * Sets an identifier defined by its name. Also stores the original
+		 * expression for later use. (if identifier cannot be resolved,
+		 * needs to be calculated later)
+		 * 
+		 * @param {type} id
+		 * @param {type} value
+		 * @param {type} length
+		 * @param {type} expression
+		 * @returns {undefined}
+		 */
 		setIdentifier: function(id, value, length, expression) {
 			this.identifiers[id] = {
 				value: value,
@@ -540,7 +672,14 @@ ASM.Compiler = (function() {
 				expression: expression
 			};
 		},
-				
+		
+		/**
+		 * returns an identifier, if not exist returns an empty object, length
+		 * is set to 2 (needed in pass1)
+		 * 
+		 * @param {type} id
+		 * @returns {unresolved}
+		 */
 		getIdentifier: function(id) {
 			var idData = this.identifiers[id]
 			
