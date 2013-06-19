@@ -21,12 +21,12 @@ ASM.Compiler = (function() {
 		RX_CODESPLITTER = /^\s*((?:[a-zA-Z_][a-zA-z0-9]*?|\*)\s*=|[a-zA-Z]{3}|\.[a-zA-Z]*)\s*(.*)$/i,
 		
 		RX_ADDRTYPE_IMM = /^#(.*)$/i,
-		RX_ADDRTYPE_INDY = /^\(([^\)]*)\)\s*,\s*y$/i,
-		RX_ADDRTYPE_INDX = /^\(([^\)]*)\s*,\s*x\)$/i,
-		RX_ADDRTYPE_IND = /^\(([^\),]*)\)$/i,
-		RX_ADDRTYPE_ABSY = /^([^,\(\)]*)\s*,\s*y$/i,
-		RX_ADDRTYPE_ABSX = /^([^,\(\)]*)\s*,\s*x$/i,
-		RX_ADDRTYPE_ABS = /^([^,]*)$/i,
+		RX_ADDRTYPE_INDY = /^\(([^\)]*)\)\s*,\s*y\s*$/i,
+		RX_ADDRTYPE_INDX = /^\(([^\)]*)\s*,\s*x\)\s*$/i,
+		RX_ADDRTYPE_IND = /^\(([^\),]*)\)\s*$/i,
+		RX_ADDRTYPE_ABSY = /^([^,\(\)]*)\s*,\s*y\s*$/i,
+		RX_ADDRTYPE_ABSX = /^([^,\(\)]*)\s*,\s*x\s*$/i,
+		RX_ADDRTYPE_ABS = /^([^,]*)\s*$/i,
 		RX_ADDRTYPE_IMP = /^\s*$/i,
 		
 		TYPE_DIRECTIVE = "Directive",
@@ -70,6 +70,7 @@ ASM.Compiler = (function() {
 			this.opcodes = config.opcodes || ASM.Opcode;
 			this.directives = {};
 			this.output = undefined;
+			this.outputs = {};
 		},
 				
 		/**
@@ -79,8 +80,12 @@ ASM.Compiler = (function() {
 		 * @param {ASM.Directive} directive
 		 * @returns {undefined}
 		 */
-		addDirective: function(name, directive) {
-			this.directives[name] = directive;
+		addDirective: function(name, directiveObj) {
+			this.directives[name] = directiveObj;
+		},
+				
+		addOutput: function(name, outputObj) {
+			this.outputs[name] = outputObj
 		},
 		/**
 		 * Compiles any string into byte code using this.opcodes
@@ -345,6 +350,16 @@ ASM.Compiler = (function() {
 			console.info(">>>>>", lineData.directiveData.data);
 			this.output = this.output.concat(lineData.directiveData.data)
 		},
+				
+		generate: function(outputType) {
+			var outputGenerator = this.outputs[outputType];
+			
+			if(outputGenerator instanceof ASM.Output) {
+				return outputGenerator.parse(this.data, this.output)
+			} else {
+				// error handling
+			}
+		},
 		/**
 		 * Processes opcode (evaluates expressions, calculates addressing mode, opcode length)
 		 * 
@@ -439,6 +454,15 @@ ASM.Compiler = (function() {
 			else if (matchINDX) { type = "INDX";  arg = matchINDX[1];}
 			else if (matchINDY) { type = "INDY";  arg = matchINDY[1];}
 			else if (matchABS) { type = "ABS";  arg = matchABS[1];}
+			
+			console.info("IMM", arg, matchIMM);
+			console.info("IMP", arg, matchIMP);
+			console.info("ABS", arg, matchABS);
+			console.info("ABSX", arg, matchABSX);
+			console.info("ABSY", "'"+arg+"'", matchABSY);
+			console.info("IND", arg, matchIND);
+			console.info("INDX", arg, matchINDX);
+			console.info("INDY", arg, matchINDY);
 			
 			return {
 				type: type,

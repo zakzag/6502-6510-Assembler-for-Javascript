@@ -30,6 +30,9 @@ ASM.Assembler = (function() {
 			
 			this.compiler.addDirective("text", new ASM.directive.Text(this.compiler));
 			
+			this.compiler.addOutput("raw", new ASM.output.Raw());
+			this.compiler.addOutput("humanreadable", new ASM.output.HumanReadable());
+			
 			this.textEl = document.getElementById(config.textId);
 			this.messagesEl = document.getElementById(config.messagesId);
 			this.outputEl = document.getElementById(config.outputId);
