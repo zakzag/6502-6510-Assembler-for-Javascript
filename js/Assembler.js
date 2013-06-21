@@ -29,6 +29,8 @@ ASM.Assembler = (function() {
 			});
 			
 			this.compiler.addDirective("text", new ASM.directive.Text(this.compiler));
+			this.compiler.addDirective("byte", new ASM.directive.Byte(this.compiler));
+			this.compiler.addDirective("word", new ASM.directive.Word(this.compiler));
 			
 			this.compiler.addOutput("raw", new ASM.output.Raw());
 			this.compiler.addOutput("humanreadable", new ASM.output.HumanReadable());
@@ -41,6 +43,7 @@ ASM.Assembler = (function() {
 		compile: function() {
 			//try {
 				this.compiler.compile(this.textEl.value);
+				console.info(this.compiler.generate("humanreadable"));
 			//} catch(e) {
 				//if (e instanceof ASM.Error) {
 					//this.log(e.message);

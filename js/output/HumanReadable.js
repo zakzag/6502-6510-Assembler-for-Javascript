@@ -1,14 +1,37 @@
 ASM.output.HumanReadable = (function() {
-	var zeroStr = "00000000",
-		spaceStr = "                                    ";
+	"use strict"
+	var zeroStr = "0000000000000",
+		spaceStr = "                                        ",
+		addressingModeTemplates = {
+			"IMM": "#{arg}", 
+			"ZP": "{arg}", 
+			"ZPX": "{arg},X", 
+			"ZPY": "{arg},Y", 
+			"ABS": "{arg}", 
+			"ABSX": "{arg},X", 
+			"ABXY": "{arg},Y", 
+			"INDX": "({arg}),Y", 
+			"INDY": "({arg},X)", 
+			"IMP": "", 
+			"REL": "{arg}", 
+			"IND": "({arg})"
+		};
 	
 	function fixedWidthNum(num, length) {
 		var numStr = new String(num);
 		return zeroStr.substring(0, length - numStr.length) + num;
 	}
+	
+	function parseTemplate(name, arg) {
+		return addressingModeTemplates[name].replace("{arg}", arg);
+	}
 
-	function fixedWidth(str, length) {
+	function fixedWidthLeft(str, length) {
 		return str + spaceStr.substring(0, length - str.length);
+	}
+	
+	function fixedWidthRight(str, length) {
+		return spaceStr.substring(0, length - str.length) + str;
 	}
 	
 	return ASM.Util.extend(ASM.Output, {
@@ -21,10 +44,8 @@ ASM.output.HumanReadable = (function() {
 			for (var i = 0, len = data.length; i < len; i++) {
 				var lineData = data[i],
 					fnName;
-
 				fnName = "parse" + lineData.type;
-				console.info(fnName);
-				typeof this[fnName] == "function" && this[fnName].call(lineData)
+				typeof this[fnName] == "function" && this[fnName].call(this, lineData);
 			}
 			
 			return this.output;
@@ -34,19 +55,21 @@ ASM.output.HumanReadable = (function() {
 			var bytes = lineData.opcodeData.data,
 				opcode = lineData.opcodeData.opcode,
 
-				lineStr = fixedWidthNum(lineData.pc.toString(16),4);
+				lineStr = fixedWidthNum(lineData.pc.toString(16),4),
+				argStr = "";
 		
 			for (var i = 0, len = bytes.length; i< len; i++) {
-				lineStr += " " + fixedWidthNum(bytes[i], 2);				
+				argStr += " " + fixedWidthNum(bytes[i].toString(16), 2);				
 			}
 			
-			lineStr += opcode;
-			
+			lineStr += fixedWidthLeft(argStr,10) + opcode + " " +
+					parseTemplate(lineData.opcodeData.addressingMode, "$" + lineData.opcodeData.originalArgValue.toString(16));
+
 			this.output += lineStr +"\n";
 		},
 
 		parseDirective: function(lineData) {
-
+			//console.info(lineData.directiveData);
 		}
 	});
-});
+})();

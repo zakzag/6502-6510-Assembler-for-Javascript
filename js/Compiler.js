@@ -112,7 +112,6 @@ ASM.Compiler = (function() {
 		 * @returns {undefined}
 		 */
 		pass0: function() {
-			console.groupCollapsed("pass0")
 			this.pc = this.defaultStart;
 			window.dd = this;
 			
@@ -139,7 +138,6 @@ ASM.Compiler = (function() {
 				fnName = "pass0" + parts.type;
 				this[fnName] && this[fnName](lineData);
 			}
-			console.groupEnd("pass0");
 		},
 				
 		/**
@@ -149,7 +147,6 @@ ASM.Compiler = (function() {
 		 * @returns {undefined}
 		 */
 		pass0PC: function(lineData) {
-			console.info("set PC to ",this.evalExpression(lineData.parts.args).value);
 			this.pc = lineData.pc = this.evalExpression(lineData.parts.args).value;
 		},
 		/**
@@ -172,7 +169,6 @@ ASM.Compiler = (function() {
 		 * @returns {undefined}
 		 */
 		pass1: function() {
-			console.groupCollapsed("pass1")
 			var fnName,
 				lineData;
 			this.pc = this.defaultStart;
@@ -192,7 +188,6 @@ ASM.Compiler = (function() {
 				
 				// TODO: pass1Directive-t megcsinalni, mert a directive utani labelek nem lesznek jok;
 			}
-			console.groupEnd("pass1")
 		},
 		/**
 		 * Pass1 sub: sets the program counter
@@ -201,7 +196,6 @@ ASM.Compiler = (function() {
 		 * @returns {undefined}
 		 */
 		pass1PC: function(lineData) {
-			console.info("set PC to ",this.evalExpression(lineData.parts.args).value);
 			lineData.pc = this.pc;
 			this.pc = this.evalExpression(lineData.parts.args).value;
 		},
@@ -227,25 +221,18 @@ ASM.Compiler = (function() {
 		 * @returns {undefined}
 		 */
 		pass2: function() {
-			console.groupCollapsed("pass2");
 			for (var identifierName in this.identifiers) {
 				var identifier = this.identifiers[identifierName];
-				console.info(identifierName, this.identifiers[identifierName]);
 				if (isNaN(identifier.value) || identifier.value === undefined) {
-					console.info("unresolved identifier found");
 					this.setIdentifier(identifierName, this.evalExpression(identifier.expression));
-					
-					console.info(identifierName, ":", this.evalExpression(identifier.expression));
 				}
 			}
-			console.groupEnd("pass2");
 		},
 		/**
 		 * Pass3: finalize opcode arguments (replaces identifiers resolved in pass2)
 		 * @returns {undefined}
 		 */		
 		pass3: function() {
-			console.group("pass3");
 			var fnName,
 				lineData;
 			this.pc = this.defaultStart;
@@ -254,11 +241,9 @@ ASM.Compiler = (function() {
 				this.currentLine = i;
 				
 				lineData = this.data[i];// atirni each-re
-				console.info(lineData);
 				fnName = "pass3" + lineData.parts.type;
 				this[fnName] && this[fnName](lineData);
 			}
-			console.groupEnd("pass3");
 		},
 		/**
 		 * Pass3: sets program counter
@@ -301,8 +286,6 @@ ASM.Compiler = (function() {
 				
 				var parsed = directive.parse();
 				
-				console.info("directive", directiveClassName, parsed);
-				
 				lineData.directiveData = parsed;
 			
 				this.pc += parsed.length;
@@ -325,7 +308,6 @@ ASM.Compiler = (function() {
 				this.currentLine = i;
 				
 				lineData = this.data[i];// atirni each-re
-				console.info(i);
 				fnName = "pass4" + lineData.parts.type;
 				this[fnName] && this[fnName](lineData);
 			}
@@ -338,7 +320,6 @@ ASM.Compiler = (function() {
 		 * @returns {undefined}
 		 */
 		pass4Opcode: function(lineData) {
-			console.info(">>>>>", lineData.opcodeData.data);
 			this.output = this.output.concat(lineData.opcodeData.data)
 		},
 		/**
@@ -347,7 +328,6 @@ ASM.Compiler = (function() {
 		 * @returns {undefined}
 		 */
 		pass4Directive: function(lineData) {
-			console.info(">>>>>", lineData.directiveData.data);
 			this.output = this.output.concat(lineData.directiveData.data)
 		},
 				
@@ -357,6 +337,7 @@ ASM.Compiler = (function() {
 			if(outputGenerator instanceof ASM.Output) {
 				return outputGenerator.parse(this.data, this.output)
 			} else {
+				console.info("no such output type:", outputType);
 				// error handling
 			}
 		},
@@ -373,6 +354,7 @@ ASM.Compiler = (function() {
 				arg = addressingModeData.arg,
 				valueData = this.evalExpression(arg),
 				value = valueData.value,
+				originalValue = value,
 				argLength = valueData.length,
 				opInfo = this.opcodes[opcode],
 				result;
@@ -398,7 +380,6 @@ ASM.Compiler = (function() {
 				} else {
 					value = 0xff - (this.pc - value);
 				}
-				console.info(">>REL:", value, this.pc);
 			}
 			
 			if (addressingMode === "IMP") {
@@ -418,6 +399,8 @@ ASM.Compiler = (function() {
 				addressingMode: addressingMode,
 				length: argLength + 1,
 				arg: addressingModeData.arg,
+				argValue: value,
+				originalArgValue: originalValue,
 				data: []
 			};
 			
@@ -454,15 +437,6 @@ ASM.Compiler = (function() {
 			else if (matchINDX) { type = "INDX";  arg = matchINDX[1];}
 			else if (matchINDY) { type = "INDY";  arg = matchINDY[1];}
 			else if (matchABS) { type = "ABS";  arg = matchABS[1];}
-			
-			console.info("IMM", arg, matchIMM);
-			console.info("IMP", arg, matchIMP);
-			console.info("ABS", arg, matchABS);
-			console.info("ABSX", arg, matchABSX);
-			console.info("ABSY", "'"+arg+"'", matchABSY);
-			console.info("IND", arg, matchIND);
-			console.info("INDX", arg, matchINDX);
-			console.info("INDY", arg, matchINDY);
 			
 			return {
 				type: type,
@@ -545,7 +519,7 @@ ASM.Compiler = (function() {
 			var codeParts = RX_CODESPLITTER.exec(str);
 
 			if (codeParts === null) {
-				console.info("err",str, str.length);
+				console.info("Syntax error",str, str.length);
 				throw new ASM.Error.Syntax("line is neither an opcode nor an identifier", this.currentLine);
 			}
 
@@ -591,7 +565,6 @@ ASM.Compiler = (function() {
 					resultData.value = (resultData.value & 0xff00) >>> 8;
 				}
 			}
-			console.info("expression: ", expression, "eval'd as ", resultData); 
 			return resultData;
 		},
 		/**
@@ -639,7 +612,7 @@ ASM.Compiler = (function() {
 				length;
 			
 			if(valueParts === null) {
-				console.info("value cannot be processed", value);
+				console.info("Value cannot be processed", value);
 				throw new ASM.Error.Syntax("value cannot be processed:" + value, this.currentLine);
 			}
 			// hexa
@@ -660,7 +633,6 @@ ASM.Compiler = (function() {
 				length = 2;
 			} else if (valueParts[8] !== undefined) {
 				var resultData = this.getIdentifier(valueParts[8]);
-				console.info("identifier found:", valueParts[8], resultData.value, resultData.length);
 				result = resultData.value;
 				length = resultData.length;
 			} else {

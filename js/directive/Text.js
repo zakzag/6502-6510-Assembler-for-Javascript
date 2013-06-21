@@ -5,10 +5,8 @@ ASM.directive.Text = ASM.Util.extend(ASM.Directive, {
 	rx: /^(?:"|')(.*)($1)$/i,
 	parse: function() {
 		this.validate();
-		console.info("-------[directive text]-----------");
 		var value = this.data.substring(1,this.data.length-1), 
 			data= [];
-		console.info("value", this.data, value);
 		for (var i = 0, len = value.length; i < len; i++) {
 			data.push(value.charCodeAt(i) & 0xff);
 		}

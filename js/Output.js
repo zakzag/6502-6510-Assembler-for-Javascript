@@ -7,10 +7,10 @@
 ASM.Output = (function() {
 	return ASM.Util.extend(Object, {
 		constructor: function(name, compiler) {
-			this.name = name;            // name of the directive
+			this.name = name;            // name of the output type
 			
 		}
 	});
-});
+})();
 
 ASM.output = {};
