@@ -1,6 +1,5 @@
 ASM.directive.Byte = ASM.Util.extend(ASM.Directive, {
 	constructor: function(compiler) {
-		console.info(compiler);
 		ASM.directive.Byte.superclass.constructor.call(this, 'Byte', compiler);
 	},
 	rx: /^.*$/i,

@@ -3,6 +3,7 @@
  * class for Opcodes and Directives.
  */
 ASM.Compiler = (function() {
+	//  Regular expressions to verify and split code
 	var RX_EMPTYLINE = /^\s*$/i,
 		RX_IDENTIFIER = /^\s*([^\s]+)\s*=\s*$/i,
 		
@@ -15,7 +16,6 @@ ASM.Compiler = (function() {
 		RX_EXPRESSION_SPLITTER = /\s*[\+\-]\s*/i,
 		RX_OPERATOR_COLLECTOR = /[+\-]/g,
 		RX_DIRECTIVE_SPLITTER = /,/i,
-		//RX_VALUE_SPLITTER = /^\s*(<|>)*\s*(((\$)([a-zA-Z0-9]*))|([0-9]*)|(%)([01]*)|([a-zA-Z_0-9]*)|(\*))\s*$/i,
 		RX_VALUE_SPLITTER = /^\s*(((\$)([a-zA-Z0-9]*))|([0-9]*)|(%)([01]*)|([a-zA-Z_0-9]*)|(\*))\s*$/i,
 		RX_LINESPLITTER = /^(?:([^:]*?):)?([^;]*);?(.*)*?$/i,
 		RX_CODESPLITTER = /^\s*((?:[a-zA-Z_][a-zA-z0-9]*?|\*)\s*=|[a-zA-Z]{3}|\.[a-zA-Z]*)\s*(.*)$/i,
@@ -41,16 +41,18 @@ ASM.Compiler = (function() {
 			"-": "Sub"
 		}
 
-	return ASM.Util.extend(Object, {
+	return ASM.Util.extend(ASM.Observer, {
 		constructor: function(config) {
 			this.init(config);
 		},
 
-		/** @var {number} pc     Program counter: contains the current position 
+		/** 
+		 * @var {number} pc     Program counter: contains the current position 
 		 *                       of the program counter during compiling
 		 */ 
 		pc: undefined,
-		/** @var {number} currentLine     Program counter: contains the current 
+		/** 
+		 * @var {number} currentLine     Program counter: contains the current 
 		 *                                line number during compiling
 		 */ 
 		currentLine: undefined,
@@ -64,13 +66,12 @@ ASM.Compiler = (function() {
 			/** @var {object} config     is permanent, so are saved into this.config */
 			this.config = config;
 			
-			this.defaultStart = config.defaultStart || 0x1000;
-			this.scope = config.scope || this;
-			this.currentLine = undefined;
-			this.opcodes = config.opcodes || ASM.Opcode;
-			this.directives = {};
-			this.output = undefined;
-			this.outputs = {};
+			this.defaultStart = config.defaultStart || 0x1000;	// defaultStart: if no pc defined, use $1000
+			this.currentLine = undefined;                       // the currently processed line during compiling
+			this.opcodes = config.opcodes || ASM.Opcode;        // all existing opcodes
+			this.directives = {};                               // directive objects
+			this.output = undefined;                            // generated code in bytes
+			this.outputs = {};                                  // output generator objects
 		},
 				
 		/**
@@ -78,43 +79,65 @@ ASM.Compiler = (function() {
 		 * 
 		 * @param {string} name
 		 * @param {ASM.Directive} directive
-		 * @returns {undefined}
+		 * @returns {object}
 		 */
 		addDirective: function(name, directiveObj) {
 			this.directives[name] = directiveObj;
+			return this;
 		},
 				
+		/**
+		 * Adds a new output type to the compiler
+		 * 
+		 * @param {string} name
+		 * @param {ASM.Output} output object
+		 * @returns {object}
+		 */
 		addOutput: function(name, outputObj) {
-			this.outputs[name] = outputObj
+			this.outputs[name] = outputObj;
+			return this;
 		},
 		/**
 		 * Compiles any string into byte code using this.opcodes
 		 * 
 		 * @param {string} text       text to compile
-		 * @returns {string}          byte code in string
+		 * @returns {object}          self
 		 */
 		compile: function(text) {
 			console.clear();
+			// clean identifiers
 			this.identifiers = {};
+			// get lines one by one from text, by splitting it.
 			this.lines = text.split("\n");
+			// pc starts from the default
 			this.pc = this.defaultStart;
+			// clear data and output
 			this.data = [];
 			this.output = [];
-
+			
+			var startTime = new Date;
+			// passes 
 			this.pass0();
 			this.pass1();
 			this.pass2();
 			this.pass3();
 			this.pass4();
+			
+			var endTime = new Date;
+			
+			var duration = endTime - startTime;
+			var idCount = 0;
+			for (var i in this.identifiers) { idCount++; };
+			this.log("lines:" + this.currentLine + ", identifiers: " + idCount + " compiled in " + duration+"ms.", 1);
+			this.log("done.", 1);
+			
+			return this;
 		},
 		/**
 		 * Pass #0: Preprocess identifiers
 		 * @returns {undefined}
 		 */
 		pass0: function() {
-			this.pc = this.defaultStart;
-			window.dd = this;
-			
 			for (var i = 0, len = this.lines.length; i < len; i++) {
 				this.currentLine = i;
 				
@@ -150,8 +173,8 @@ ASM.Compiler = (function() {
 			this.pc = lineData.pc = this.evalExpression(lineData.parts.args).value;
 		},
 		/**
-		 * Identifier resolution, pass0. Identifier not necesserily resolved,
-		 * but its length is defined  (for pass1)
+		 * Identifier resolution, pass0. Identifier will not get necessarily resolved,
+		 * but its length will be set (for pass1)
 		 * 
 		 * @param {type} lineData
 		 * @returns {undefined}
@@ -188,7 +211,7 @@ ASM.Compiler = (function() {
 				
 				// TODO: pass1Directive-t megcsinalni, mert a directive utani labelek nem lesznek jok;
 			}
-		},
+		},	
 		/**
 		 * Pass1 sub: sets the program counter
 		 * 
@@ -268,6 +291,10 @@ ASM.Compiler = (function() {
 				args = lineData.parts.args;
 		
 			var opcodeData = this.getOpcodeData(opcode, args);
+			
+			// if value cannot get calculated and addressing mode requires a value, throw an error.
+			isNaN(opcodeData.argValue) && (opcodeData.addressingMode !== ASM.AddressingMode.IMP.shortName) && this.log("invalid expression:" + opcodeData.arg, 0);
+				
 			lineData.opcodeData = opcodeData;
 			this.pc +=  opcodeData.length;
 		},
@@ -365,6 +392,7 @@ ASM.Compiler = (function() {
 						addressingMode = "REL"
 					} else {
 						// error
+						this.log("Invalid addressing mode", 0);
 					};
  				} else {
 					if (argLength === 1) {
@@ -375,24 +403,31 @@ ASM.Compiler = (function() {
 			
 			if(addressingMode === "REL") {
 				argLength = 1;
+				
 				if (this.pc < value) {
+					if (value - this.pc > 127) {
+						this.log("Relative addressing allowes only 128bytes backjump.", 0)
+					}
 					value -= this.pc;
 				} else {
+					if (value-this.pc < -128) {
+						this.log("Relative addressing allowes only 127bytes jump.", 0)
+					}
 					value = 0xff - (this.pc - value);
-				}
-			}
+				};
+			};
 			
 			if (addressingMode === "IMP") {
 				argLength = 0;
-			}
+			};
 			
 			if (addressingMode === "ABSX" && argLength === 1) {
 				addressingMode = "ZPX";
-			} 
+			};
 			
 			if (addressingMode === "ABSY" && argLength === 1) {
 				addressingMode = "ZPY";
-			}
+			};
 			
 			result = {
 				opcode: opcode,
@@ -403,6 +438,8 @@ ASM.Compiler = (function() {
 				originalArgValue: originalValue,
 				data: []
 			};
+			
+			argLength == 2 && value > 0xffff && this.log("Operand overflow: "+ value, 0);
 			
 			result.data.push(opInfo[ASM.AddressingMode[addressingMode].index]);
 			argLength >= 1 && result.data.push(value & 0xff);
@@ -489,8 +526,7 @@ ASM.Compiler = (function() {
 					codeParts;
 
 				if (parts === null) {
-					console.info("error in line", this.currentLine);
-					throw new ASM.Error.Syntax("invalid line", this.currentLine);
+					this.log("unable to process line: '" + line + "'" , 0);
 				}
 
 				codeParts = this.splitCode(parts[2]);
@@ -517,11 +553,7 @@ ASM.Compiler = (function() {
 				}
 			} 
 			var codeParts = RX_CODESPLITTER.exec(str);
-
-			if (codeParts === null) {
-				console.info("Syntax error",str, str.length);
-				throw new ASM.Error.Syntax("line is neither an opcode nor an identifier", this.currentLine);
-			}
+			codeParts === null && this.log("Unable to process line", 0);
 
 			return {
 				code: codeParts[1],
@@ -544,14 +576,17 @@ ASM.Compiler = (function() {
 				firstExpr = exprParts[0],
 				hiLoSelector = this.getHiLoSelector(firstExpr) ? firstExpr[0][0] : undefined;
 			
-			resultData = this.evalValue(hiLoSelector ? firstExpr.substr(1)  :exprParts[0]);
+			exprParts === null && this.log("invalid expression", 0);
+			resultData = this.evalValue(hiLoSelector ? firstExpr.substr(1)  : exprParts[0]);
 			
 			for (var i = 1, len = exprParts.length; i < len; i++) {
 				var partN = exprParts[i],
 					valueDataN = this.evalValue(partN),
 					operator = operators[i - 1];
 				
-				resultData.length = valueDataN.length > resultData.length ? valueDataN.length : resultData.length; 
+				// length is always the biggest one
+				resultData.length = valueDataN.length > resultData.length ? valueDataN.length : resultData.length;
+				
 				if (!isNaN(resultData.value)) {
 					resultData.value = this["operator" + OPERATOR_MAP[operator]].call(this, resultData.value, valueDataN.value);
 				}
@@ -559,11 +594,7 @@ ASM.Compiler = (function() {
 			
 			if (hiLoSelector) {
 				resultData.length = 1;
-				if (hiLoSelector === "<") {
-					resultData.value = resultData.value & 0xff;
-				} else {
-					resultData.value = (resultData.value & 0xff00) >>> 8;
-				}
+				resultData.value = (hiLoSelector === "<") ? resultData.value & 0xff : (resultData.value & 0xff00) >>> 8;
 			}
 			return resultData;
 		},
@@ -636,12 +667,11 @@ ASM.Compiler = (function() {
 				result = resultData.value;
 				length = resultData.length;
 			} else {
-				//throw new ASM.Error.Invalid("illegal value: "+ value, this.currentLine);
+				this.log("illegal value: " + value, 0)
 			};
 			
 			if (typeof length !== "number") {
-				console.warn("not set:", valueParts);
-				//throw new ASM.Error.Invalid("invalid value: "+ value, this.currentLine);
+				this.log("expression has no value.", 0);
 			}
 
 			return {
@@ -680,6 +710,24 @@ ASM.Compiler = (function() {
 			var idData = this.identifiers[id]
 			
 			return idData ? idData : { value: undefined, length: 2, expression: undefined };
+		},
+				
+		log: function(message, level) {
+			level == level || 1;
+
+			var msgData = {
+				message: message,
+				line: this.currentLine,
+				text: this.data[this.currentLine].line,
+				level: level || 2
+			}
+			
+			if (level == 0) {
+				this.fire("fatal", msgData);
+				throw new Error(message + "in line #"+ this.currentLine);
+			} else {
+				this.fire("log", msgData);
+			}
 		}
 	});
 })();

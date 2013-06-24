@@ -1,6 +1,5 @@
 ASM.directive.Word = ASM.Util.extend(ASM.Directive, {
 	constructor: function(compiler) {
-		console.info(compiler);
 		ASM.directive.Word.superclass.constructor.call(this, 'Word', compiler);
 	},
 	rx: /^.*$/i,
