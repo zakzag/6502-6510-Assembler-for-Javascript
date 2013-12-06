@@ -4,8 +4,10 @@
  * 
  * @class ASM.Directive / base class for directives
  */
-ASM.Directive = (function() {
-	return ASM.Util.extend(Object, {
+var Util = require("./Util");
+
+module.exports = (function() {
+	return Util.extend(Object, {
 		constructor: function(name, compiler) {
 			this.name = name;            // name of the directive
 			this.result = undefined;
@@ -26,5 +28,3 @@ ASM.Directive = (function() {
 		}
 	});
 })();
-
-ASM.directive = {};

@@ -4,13 +4,12 @@
  * 
  * @class ASM.Directive / base class for directives
  */
-ASM.Output = (function() {
-	return ASM.Util.extend(Object, {
+var Util = require("./Util");
+
+module.exports = (function() {
+	return Util.extend(Object, {
 		constructor: function(name, compiler) {
-			this.name = name;            // name of the output type
-			
+			this.name = name;            // name of the output type			
 		}
 	});
 })();
-
-ASM.output = {};

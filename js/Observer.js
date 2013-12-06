@@ -1,6 +1,8 @@
-ASM.Observer = (function() {
-	"use srtict"
-	var ObserverClass = ASM.Util.extend(Object, {
+var Util = require("./Util");
+
+module.exports = (function() {
+	"use srtict";
+	var ObserverClass = Util.extend(Object, {
 		/**
 		 * constructor: empty, does nothing yet
 		 * 
@@ -68,4 +70,4 @@ ASM.Observer = (function() {
 	});
 	
 	return ObserverClass;
-})()
+})();

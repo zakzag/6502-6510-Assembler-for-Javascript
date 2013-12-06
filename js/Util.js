@@ -2,7 +2,7 @@
  * Basic functions for the assembler. Implements inheritance and
  * object shallow copy
  */
-ASM.Util = (function() {
+module.exports = (function() {
     var UtilClass = {
 		/**
 		 * Shallow copy 
@@ -17,7 +17,7 @@ ASM.Util = (function() {
             if (defaults) {
                 B.apply(o, defaults);
             }
-            if (o && c && typeof c == 'object') {
+            if (o && c && typeof c === 'object') {
                 for (var p in c) {
                     o[p] = c[p];
                 }
@@ -34,10 +34,10 @@ ASM.Util = (function() {
             var oc = Object.prototype.constructor;
 
             return function(sb, sp, overrides) {
-                if (typeof sp == "object") {
+                if (typeof sp === "object") {
                     overrides = sp;
                     sp = sb;
-                    sb = overrides.constructor != oc ? overrides.constructor : function() {
+                    sb = overrides.constructor !== oc ? overrides.constructor : function() {
                         sp.apply(this, arguments);
                     };
                 }
@@ -51,7 +51,7 @@ ASM.Util = (function() {
                 sbp.constructor = sb;
                 sb.superclass = spp;
 
-                if (spp.constructor == oc) {
+                if (spp.constructor === oc) {
                     spp.constructor = sp;
                 }
                 sb.override = function(o) {

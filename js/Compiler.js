@@ -2,7 +2,13 @@
  * Compiler class, is able to compile text into byte code using separate 
  * class for Opcodes and Directives.
  */
-ASM.Compiler = (function() {
+var Util = require("./Util");
+var Observer = require("./Observer");
+var Opcode = require("./Opcode");
+var Directive = require("./Directive");
+var Output = require("./Output");
+
+module.exports = (function() {
 	//  Regular expressions to verify and split code
 	var RX_EMPTYLINE = /^\s*$/i,
 		RX_IDENTIFIER = /^\s*([^\s]+)\s*=\s*$/i,
@@ -39,9 +45,9 @@ ASM.Compiler = (function() {
 		OPERATOR_MAP = {
 			"+": "Add",
 			"-": "Sub"
-		}
+		};
 
-	return ASM.Util.extend(ASM.Observer, {
+	return Util.extend(Observer, {
 		constructor: function(config) {
 			this.init(config);
 		},
@@ -65,10 +71,11 @@ ASM.Compiler = (function() {
 		init: function(config) {
 			/** @var {object} config     is permanent, so are saved into this.config */
 			this.config = config;
+			this.memory = new Int8Array();
 			
 			this.defaultStart = config.defaultStart || 0x1000;	// defaultStart: if no pc defined, use $1000
 			this.currentLine = undefined;                       // the currently processed line during compiling
-			this.opcodes = config.opcodes || ASM.Opcode;        // all existing opcodes
+			this.opcodes = config.opcodes || Opcode;            // all existing opcodes
 			this.directives = {};                               // directive objects
 			this.output = undefined;                            // generated code in bytes
 			this.outputs = {};                                  // output generator objects
@@ -78,7 +85,7 @@ ASM.Compiler = (function() {
 		 * Adds a new directive type to the compiler
 		 * 
 		 * @param {string} name
-		 * @param {ASM.Directive} directive
+		 * @param {Directive} directiveObj
 		 * @returns {object}
 		 */
 		addDirective: function(name, directiveObj) {
@@ -90,7 +97,7 @@ ASM.Compiler = (function() {
 		 * Adds a new output type to the compiler
 		 * 
 		 * @param {string} name
-		 * @param {ASM.Output} output object
+		 * @param {Output} outputObj  object
 		 * @returns {object}
 		 */
 		addOutput: function(name, outputObj) {
@@ -104,13 +111,16 @@ ASM.Compiler = (function() {
 		 * @returns {object}          self
 		 */
 		compile: function(text) {
-			console.clear();
 			// clean identifiers
 			this.identifiers = {};
 			// get lines one by one from text, by splitting it.
 			this.lines = text.split("\n");
 			// pc starts from the default
 			this.pc = this.defaultStart;
+			// the lowest address in this compilation
+			this.minAddress = this.pc;
+			// the highest memory Address in this compilation
+			this.maxAddress = this.pc;
 			// clear data and output
 			this.data = [];
 			this.output = [];
@@ -181,7 +191,7 @@ ASM.Compiler = (function() {
 		 */
 		pass0Assignment: function(lineData) {
 			var expressionData = this.evalExpression(lineData.parts.args);
-			var label = RX_IDENTIFIER.exec(lineData.parts.code)[1]
+			var label = RX_IDENTIFIER.exec(lineData.parts.code)[1];
 			this.setIdentifier(label, expressionData.value, expressionData.length, lineData.parts.args);
 		},
 		
@@ -293,7 +303,7 @@ ASM.Compiler = (function() {
 			var opcodeData = this.getOpcodeData(opcode, args);
 			
 			// if value cannot get calculated and addressing mode requires a value, throw an error.
-			isNaN(opcodeData.argValue) && (opcodeData.addressingMode !== ASM.AddressingMode.IMP.shortName) && this.log("invalid expression:" + opcodeData.arg, 0);
+			isNaN(opcodeData.argValue) && (opcodeData.addressingMode !== Opcode.AddressingMode.IMP.shortName) && this.log("invalid expression:" + opcodeData.arg, 0);
 				
 			lineData.opcodeData = opcodeData;
 			this.pc +=  opcodeData.length;
@@ -347,7 +357,7 @@ ASM.Compiler = (function() {
 		 * @returns {undefined}
 		 */
 		pass4Opcode: function(lineData) {
-			this.output = this.output.concat(lineData.opcodeData.data)
+			this.output = this.output.concat(lineData.opcodeData.data);
 		},
 		/**
 		 * Pass4 sub: get&add Directive data
@@ -355,14 +365,14 @@ ASM.Compiler = (function() {
 		 * @returns {undefined}
 		 */
 		pass4Directive: function(lineData) {
-			this.output = this.output.concat(lineData.directiveData.data)
+			this.output = this.output.concat(lineData.directiveData.data);
 		},
 				
 		generate: function(outputType) {
 			var outputGenerator = this.outputs[outputType];
 			
-			if(outputGenerator instanceof ASM.Output) {
-				return outputGenerator.parse(this.data, this.output)
+			if(outputGenerator instanceof Output) {
+				return outputGenerator.parse(this.data, this.output);
 			} else {
 				console.info("no such output type:", outputType);
 				// error handling
@@ -385,18 +395,19 @@ ASM.Compiler = (function() {
 				argLength = valueData.length,
 				opInfo = this.opcodes[opcode],
 				result;
+			console.info("opcode",this.opcodes);
 			
 			if (addressingMode === "ABS") {
-				if (opInfo[ASM.AddressingMode.ABS.index] === 0x00) {
-					if (opInfo[ASM.AddressingMode.REL.index] !== 0x00) {
-						addressingMode = "REL"
+				if (opInfo[Opcode.AddressingMode.ABS.index] === 0x00) {
+					if (opInfo[Opcode.AddressingMode.REL.index] !== 0x00) {
+						addressingMode = "REL";
 					} else {
 						// error
 						this.log("Invalid addressing mode", 0);
 					};
  				} else {
 					if (argLength === 1) {
-						addressingMode = "ZP"
+						addressingMode = "ZP";
 					};
 				};
 			};
@@ -406,12 +417,12 @@ ASM.Compiler = (function() {
 				
 				if (this.pc < value) {
 					if (value - this.pc > 127) {
-						this.log("Relative addressing allowes only 128bytes backjump.", 0)
+						this.log("Relative addressing allowes only 128bytes backjump.", 0);
 					}
 					value -= this.pc;
 				} else {
 					if (value-this.pc < -128) {
-						this.log("Relative addressing allowes only 127bytes jump.", 0)
+						this.log("Relative addressing allowes only 127bytes jump.", 0);
 					}
 					value = 0xff - (this.pc - value);
 				};
@@ -439,9 +450,9 @@ ASM.Compiler = (function() {
 				data: []
 			};
 			
-			argLength == 2 && value > 0xffff && this.log("Operand overflow: "+ value, 0);
+			argLength === 2 && value > 0xffff && this.log("Operand overflow: "+ value, 0);
 			
-			result.data.push(opInfo[ASM.AddressingMode[addressingMode].index]);
+			result.data.push(opInfo[Opcode.AddressingMode[addressingMode].index]);
 			argLength >= 1 && result.data.push(value & 0xff);
 			argLength >= 2 && result.data.push((value & 0xff00) >>> 8);
 
@@ -478,7 +489,7 @@ ASM.Compiler = (function() {
 			return {
 				type: type,
 				arg: arg
-			}
+			};
 		},
 				
 		/**
@@ -519,7 +530,7 @@ ASM.Compiler = (function() {
 					args: undefined,
 					comment: undefined,
 					type: TYPE_EMPTY
-				}
+				};
 			}
 			else {
 				var parts = RX_LINESPLITTER.exec(line),
@@ -550,15 +561,20 @@ ASM.Compiler = (function() {
 				return {
 					code: "",
 					args: ""
-				}
+				};
 			} 
 			var codeParts = RX_CODESPLITTER.exec(str);
-			codeParts === null && this.log("Unable to process line", 0);
+			console.info(RX_CODESPLITTER);
+			
+			if(codeParts === null) { 
+				this.log("Unable to process line:>"+str+"<", 0);
+				throw new Error("Unable to process line: ", ">"+str+"<");
+			}
 
 			return {
 				code: codeParts[1],
 				args: codeParts[2]
-			}
+			};
 		},
 
 		/**
@@ -644,7 +660,7 @@ ASM.Compiler = (function() {
 			
 			if(valueParts === null) {
 				console.info("Value cannot be processed", value);
-				throw new ASM.Error.Syntax("value cannot be processed:" + value, this.currentLine);
+				throw new Error("value cannot be processed:" + value, this.currentLine);
 			}
 			// hexa
 			if (valueParts[4] !== undefined) {
@@ -667,7 +683,7 @@ ASM.Compiler = (function() {
 				result = resultData.value;
 				length = resultData.length;
 			} else {
-				this.log("illegal value: " + value, 0)
+				this.log("illegal value: " + value, 0);
 			};
 			
 			if (typeof length !== "number") {
@@ -677,7 +693,7 @@ ASM.Compiler = (function() {
 			return {
 				value: result,
 				length: length
-			}
+			};
 		},
 				
 		/**
@@ -707,22 +723,22 @@ ASM.Compiler = (function() {
 		 * @returns {unresolved}
 		 */
 		getIdentifier: function(id) {
-			var idData = this.identifiers[id]
+			var idData = this.identifiers[id];
 			
 			return idData ? idData : { value: undefined, length: 2, expression: undefined };
 		},
 				
 		log: function(message, level) {
-			level == level || 1;
+			level = level || 1;
 
 			var msgData = {
 				message: message,
 				line: this.currentLine,
-				text: this.data[this.currentLine].line,
+				//text: this.data[this.currentLine].line,
 				level: level || 2
-			}
+			};
 			
-			if (level == 0) {
+			if (level === 0) {
 				this.fire("fatal", msgData);
 				throw new Error(message + "in line #"+ this.currentLine);
 			} else {

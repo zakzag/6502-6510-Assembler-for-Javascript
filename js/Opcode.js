@@ -56,8 +56,8 @@
  *  - hi/lo byte: < , >
  *
  */
-(function() {
-	ASM.Util.apply(ASM, {
+module.exports = (function() {
+	return {
 		Opcode: {
 		/* Name: { IMM,  ZP,   ZPX,  ZPY,  ABS,  ABSX, ABSY, INDX, INDY, IMP,  REL   IND   */
 			ADC: [ 0x69, 0x65, 0x75, 0x00, 0x6d, 0x7d, 0x79, 0x61, 0x71, 0x00, 0x00, 0x00  ],
@@ -191,5 +191,5 @@
 				index: 11
 			}
 		}
-	});
+	};
 })();

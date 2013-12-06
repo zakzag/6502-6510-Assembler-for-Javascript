@@ -1,5 +1,7 @@
-ASM.output.HumanReadable = (function() {
-	"use strict"
+var Util = require("../Util");
+var Output = require("../Output");
+module.exports = (function() {
+	"use strict";
 	var zeroStr = "0000000000000",
 		spaceStr = "                                        ",
 		addressingModeTemplates = {
@@ -34,9 +36,9 @@ ASM.output.HumanReadable = (function() {
 		return spaceStr.substring(0, length - str.length) + str;
 	}
 	
-	return ASM.Util.extend(ASM.Output, {
+	var HumanreadableOutputClass = Util.extend(Output, {
 		constructor: function() {
-			ASM.output.Raw.superclass.constructor.call(this, 'Raw');
+			HumanreadableOutputClass.superclass.constructor.call(this, 'Raw');
 			this.output = "";
 		},
 
@@ -45,7 +47,7 @@ ASM.output.HumanReadable = (function() {
 				var lineData = data[i],
 					fnName;
 				fnName = "parse" + lineData.type;
-				typeof this[fnName] == "function" && this[fnName].call(this, lineData);
+				typeof this[fnName] === "function" && this[fnName].call(this, lineData);
 			}
 			
 			return this.output;
@@ -72,4 +74,6 @@ ASM.output.HumanReadable = (function() {
 			//console.info(lineData.directiveData);
 		}
 	});
+	
+	return HumanreadableOutputClass;
 })();

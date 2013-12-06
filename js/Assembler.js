@@ -1,7 +1,5 @@
 /*
- * Assembler class: the object that manages click events and
- * calls methods on Compiler. Basically this is the object that holds
- * everything together.
+ * This is the object that holds everything together.
  *
  * ASM is a namespace for all the objects and classes used in this project.
  * All of them is under ASM, so the compiler is called ASM.Compiler
@@ -14,70 +12,70 @@
  * So far only works with chrome, mozilla, opera and safari, since IE has no attachEvent. 
  * Too lazy to implement cross-browser event handling
  */
+var Compiler = require("./Compiler");
+var Opcode = require("./Opcode");
+var Directive = require("./Directive");
+var TextDirective = require("./directive/Text");
+var ByteDirective = require("./directive/Byte");
+var WordDirective = require("./directive/Word");
 
-ASM.Assembler = (function() {
+var Output = require("./Output");
+var RawOutput = require("./output/Raw");
+var HumanreadableOutput = require("./output/Humanreadable");
+var fs = require('fs')
+
+
+module.exports = (function() {
 	return {
+		inputFile: undefined,
+		outputFile: undefined,
+		inputContent: "",
 		init: function(config) {
-			for (var buttonId in config.buttons) {
-				var button = config.buttons[buttonId];
-				buttonEl = document.getElementById(buttonId);
-				buttonEl.addEventListener("click", button.bind(this));
-			}
-			this.compiler = config.compiler || new ASM.Compiler({
+			this.compiler = config.compiler || new Compiler({
 				scope: this,
-				opcodes: ASM.Opcode
+				opcodes: Opcode.Opcode,
+				outputMode: config.outputMode || "raw"
 			});
 			
+			if(!config.inputFile) {
+				throw new Error("You must specify an input file")
+			}
+			
+			if(!config.outputFile) {
+				throw new Error("You must specify an output file")
+			}
+			
+			this.inputFile = config.inputFile;
+			fs.readFile(config.inputFile, 'utf-8', (function(err, data) {
+				if (err) { throw err; };
+				this.inputContent = data;
+				config.callback instanceof Function && config.callback.call(config.scope, data);
+			}).bind(this));
+			
 			// add all directives required for compiling (more can be added, if needed)
-			this.compiler.addDirective("text", new ASM.directive.Text(this.compiler));
-			this.compiler.addDirective("byte", new ASM.directive.Byte(this.compiler));
-			this.compiler.addDirective("word", new ASM.directive.Word(this.compiler));
+			this.compiler.addDirective("text", new TextDirective(this.compiler));
+			this.compiler.addDirective("byte", new ByteDirective(this.compiler));
+			this.compiler.addDirective("word", new WordDirective(this.compiler));
 			
 			// add some output types to compiler (more can be added)
-			this.compiler.addOutput("raw", new ASM.output.Raw());
-			this.compiler.addOutput("humanreadable", new ASM.output.HumanReadable());
+			this.compiler.addOutput("raw", new RawOutput());
+			this.compiler.addOutput("humanreadable", new HumanreadableOutput());
 			// all error message and warnings even infos goes through log event,
 			// so needs to be listen to it.
 			this.compiler.on("log", this.onLog, this);
 			this.compiler.on("fatal", this.onFatalError, this);
-			// user interface items
-			this.textEl = document.getElementById(config.textId);
-			this.messagesEl = document.getElementById(config.messagesId);
-			this.outputEl = document.getElementById(config.outputId);
 		},
 		/**
 		 * Compiles the text in textEl.
 		 * 
-		 * @returns {object}    Returns self, to make function chainable.
+		 * @returns {object}    output
 		 */
 		compile: function() {
-			this.clearMessages();
-			this.clearOutput();
+			this.compiler.compile(this.inputContent);
 			
-			this.compiler.compile(this.textEl.value);
-			
-			this.outputEl.value = this.compiler.generate("humanreadable");
-			return this;
+			return this.compiler.generate("humanreadable");
 		},
-		/**
-		 * Clears message area.
-		 * 
-		 * @returns {object}    Returns self, to make function chainable.
-		 */
-		clearMessages: function() {
-			this.messagesEl.value = "";
-			
-			return this;
-		},
-		/**
-		 * Clears output area.
-		 * @returns {object}    Returns self, to make function chainable.
-		 */
-		clearOutput: function() {
-			this.outputEl.value = "";
-			
-			return this;
-		},
+		
 		/**
 		 * Occurs when a log event happens in compiler. Prints out message
 		 * 
@@ -89,44 +87,16 @@ ASM.Assembler = (function() {
 		},
 				
 		onFatalError: function(msgData) {
-			var msg = msgData.message + "   (" + msgData.text + ") in line #" + msgData.line
+			var msg = msgData.message + "   (" + msgData.text + ") in line #" + msgData.line;
 			this.log(msg);
 			throw new Error(msg);
 		},
 
-		/**
-		 * Event handler for compile button click.
-		 * 
-		 * @param {event} ev
-		 * @returns {undefined}
-		 */
-		onBtnCompileClick: function(ev) {
-			ev.preventDefault();
-			this.compile();
-		},
-
-		onBtnSaveAsClick: function(ev) {
-			console.info("save as");
-			ev.preventDefault();
-		},
-
-		onBtnClearOutputClick: function(ev) {
-			ev.preventDefault();
-			console.info("clear output");
-			this.clearOutput();
-		},
-
-		onBtnClearMessagesClick: function(ev) {
-			console.info("clear messages");
-			ev.preventDefault();
-			this.clearMessages();
-		},
-
 		log: function() {
 			for (var i= 0, len = arguments.length; i < len; i++ ) {
-				this.messagesEl.value += arguments[i] + "\n";
+				console.info(arguments[i]);
 			}
 			return this;
 		}
-	}
+	};
 })();
