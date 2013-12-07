@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<script type="text/javascript" src="js/ASM.js"></script>
+		<script type="text/javascript" src="js/Util.js"></script>
+		<script type="text/javascript" src="js/Observer.js"></script>
+		<script type="text/javascript" src="js/Assembler.js"></script>
+		<script type="text/javascript" src="js/Directive.js"></script>
+		<script type="text/javascript" src="js/directive/Text.js"></script>
+		<script type="text/javascript" src="js/directive/Byte.js"></script>
+		<script type="text/javascript" src="js/directive/Word.js"></script>
+		<script type="text/javascript" src="js/Opcode.js"></script>
+		<script type="text/javascript" src="js/Compiler.js"></script>
+		<script type="text/javascript" src="js/Output.js"></script>
+		<script type="text/javascript" src="js/output/Raw.js"></script>
+		<script type="text/javascript" src="js/output/HumanReadable.js"></script>
+		<script type="text/javascript">
+			window.onload = function(ev) {
+				ASM.Assembler.init({
+					buttons: {
+						"btnCompile": ASM.Assembler.onBtnCompileClick,
+						"btnSaveAs": ASM.Assembler.onBtnSaveAsClick,
+						"btnClearOutput": ASM.Assembler.onBtnClearOutputClick,
+						"btnClearMessages": ASM.Assembler.onBtnClearMessagesClick,
+					},
+					textId: "editor",
+					messagesId: "messages",
+					outputId: "output"
+				});
+			}
+		</script>
+		<link rel="stylesheet" type="text/css" href="css/index.css" />
+	</head>
+	<body>
+		<form action="" method="POST">
+			<div id="main">
+				<div id="header"><h1>6502 Assembler for PC</h1></div>
+				<div id="topToolbar">
+					<button id="btnCompile">Compile</button>
+					<button id="btnSaveAs">Save as..</button>
+					<button id="btnClearOutput">Clear output</button>
+					<button id="btnClearMessages">Clear messages</button>
+				</div>
+				<div id="center">
+					<div id="leftCenter">
+						<textarea id="editor" name="editor" placeholder="type program here">
+*= $C000
+
+org: 
+	ldx  #99
+bloop: 
+	jsr xout
+	lda	#<bobot
+	ldy	#28
+	jsr	strout
+	lda	#<comcr
+	ldy	#2
+	jsr	strout
+	jsr	xout
+	lda	#<bobot
+	ldy	#16
+	jsr	strout
+	lda	#<bobpa
+	ldy	#33
+	jsr	strout
+	dex
+	jsr	xout
+	lda	#<bobot
+	ldy	#28
+	jsr	strout
+	lda	#<bobpa
+	ldy	#2
+	jsr	strout
+	txa
+	bne	bloop
+	lda	#<endtx
+	ldy	#37
+	jsr	strout
+	lda	#<bobot
+	ldy	#30
+strout: 
+	sta ldins+1
+ldins: 
+	lda org
+	jsr	$ffd2
+	inc	ldins+1
+	dey
+	bne	ldins
+outdon: 
+	rts
+
+xout: 
+	txa
+	pha
+	lda	#0
+	jsr	$bdcd
+	pla
+	tax
+	rts
+
+bobot: 
+	.text " BOTTLES OF BEER ON THE WALL"
+bobpa: 
+	.text "."
+	.byte	13
+	.text	"TAKE ONE DOWN, PASS IT AROUND,"
+	.byte	13
+endtx: 
+	.text "GO TO THE STORE AND BUY SOME MORE"
+comcr: 
+	.text ","
+	.byte	13
+	.text	"99"
+
+						</textarea>
+						<textarea id="messages" name="messages" placeholder="Messages"></textarea>
+					</div>
+					<div id="rightCenter">
+						<textarea id="output" placeholder="Output"></textarea>
+					</div>
+				</div>
+				<div id="bottomToolbar"></div>
+			</div>
+		</form>
+	</body>
+</html>

@@ -1,3 +1,0 @@
-ASM= (function() {
-	return {};
-})();
