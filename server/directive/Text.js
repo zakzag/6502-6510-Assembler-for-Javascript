@@ -2,9 +2,9 @@ var Util = require("../Util");
 var Directive = require("../Directive");
 
 module.exports = (function() { 
-	var TextClass = Util.extend(Directive, {
+	var TextDirectiveClass = Util.extend(Directive, {
 		constructor: function(compiler) {
-			TextClass.superclass.constructor.call(this, 'Text', compiler);
+			TextDirectiveClass.superclass.constructor.call(this, 'Text', compiler);
 		},
 		rx: /^(?:"|')(.*)($1)$/i,
 		parse: function() {
@@ -23,5 +23,5 @@ module.exports = (function() {
 		}
 	});
 	
-	return TextClass;
-});
+	return TextDirectiveClass;
+})();

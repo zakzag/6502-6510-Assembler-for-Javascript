@@ -1,9 +1,10 @@
 /**
- * Connector for node.js
+ * usage: 
+ * node asm6502.js <inputfile> <outputfile> <outputmode>
+ * 
  */
 var Compiler = require("./Compiler");
 var Opcode = require("./Opcode");
-var Directive = require("./Directive");
 var TextDirective = require("./directive/Text");
 var ByteDirective = require("./directive/Byte");
 var WordDirective = require("./directive/Word");
@@ -11,19 +12,11 @@ var WordDirective = require("./directive/Word");
 var Output = require("./Output");
 var RawOutput = require("./output/Raw");
 var HumanreadableOutput = require("./output/Humanreadable");
-var fs = require('fs')
+var fs = require('fs');
+var util = require('util');
 
 
-assembler.init({
-	inputFile: process.argv[2],
-	outputFile: process.argv[3],
-	outputMode: process.argv[4],
-	scope: this,
-	callback: function() {
-		console.info(assembler.compile());
-	}
-});
-
+util.puts("6502/6510 Assember for Node.js V0.1.0\n\n");
 /*
  * This is the object that holds everything together.
  *
@@ -113,3 +106,18 @@ assembler = (function() {
 		}
 	};
 })();
+
+
+/**
+ * runs the assember using command line params
+ */
+
+assembler.init({
+	inputFile: process.argv[2],
+	outputFile: process.argv[3],
+	outputMode: process.argv[4],
+	scope: this,
+	callback: function() {
+		console.info(assembler.compile());
+	}
+});

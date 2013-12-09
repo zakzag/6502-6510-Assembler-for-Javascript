@@ -4,7 +4,7 @@ var Output = require("../Output");
 module.exports = (function() { 
 	var RawOutputClass = Util.extend(Output, {
 		constructor: function() {
-			ASM.output.Raw.superclass.constructor.call(this, 'Raw');
+			RawOutputClass.superclass.constructor.call(this, 'Raw');
 		},
 
 		parse: function(data, output) {
@@ -13,4 +13,4 @@ module.exports = (function() {
 	});
 	
 	return RawOutputClass;
-});
+})();

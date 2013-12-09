@@ -2,9 +2,9 @@ var Util = require("../Util");
 var Directive = require("../Directive");
 
 module.exports = (function() { 
-	var WordClass = Util.extend(Directive, {
+	var WordDirectiveClass = Util.extend(Directive, {
 		constructor: function(compiler) {
-			WordClass.Word.superclass.constructor.call(this, 'Word', compiler);
+			WordDirectiveClass.superclass.constructor.call(this, 'Word', compiler);
 		},
 		rx: /^.*$/i,
 		parse: function() {
@@ -31,4 +31,6 @@ module.exports = (function() {
 			}
 		}
 	});
-});
+	
+	return WordDirectiveClass;
+})();

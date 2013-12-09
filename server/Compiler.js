@@ -151,7 +151,7 @@ module.exports = (function() {
 			for (var i = 0, len = this.lines.length; i < len; i++) {
 				this.currentLine = i;
 				
-				var line = this.lines[i],
+				var line = this.lines[i].trim(),
 					parts = this.splitLine(line),
 					lineData,
 					fnName;
@@ -318,6 +318,7 @@ module.exports = (function() {
 		pass3Directive: function(lineData) {
 			var directiveClassName = lineData.parts.code.substr(1);
 			var directive = this.directives[directiveClassName];
+			
 			if (directive) {
 				directive.setData(lineData.parts.args);
 				
@@ -395,7 +396,6 @@ module.exports = (function() {
 				argLength = valueData.length,
 				opInfo = this.opcodes[opcode],
 				result;
-			console.info("opcode",this.opcodes);
 			
 			if (addressingMode === "ABS") {
 				if (opInfo[Opcode.AddressingMode.ABS.index] === 0x00) {
@@ -564,7 +564,6 @@ module.exports = (function() {
 				};
 			} 
 			var codeParts = RX_CODESPLITTER.exec(str);
-			console.info(RX_CODESPLITTER);
 			
 			if(codeParts === null) { 
 				this.log("Unable to process line:>"+str+"<", 0);
