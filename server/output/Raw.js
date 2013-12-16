@@ -3,8 +3,8 @@ var Output = require("../Output");
 
 module.exports = (function() { 
 	var RawOutputClass = Util.extend(Output, {
-		constructor: function() {
-			RawOutputClass.superclass.constructor.call(this, 'Raw');
+		constructor: function(compiler) {
+			RawOutputClass.superclass.constructor.call(this, 'Raw', compiler);
 		},
 
 		parse: function(data, output) {

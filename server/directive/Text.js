@@ -7,6 +7,11 @@ module.exports = (function() {
 			TextDirectiveClass.superclass.constructor.call(this, 'Text', compiler);
 		},
 		rx: /^(?:"|')(.*)($1)$/i,
+		
+		getLength: function() {
+			return this.data.length - 2;
+		},
+		
 		parse: function() {
 			this.validate();
 			var value = this.data.substring(1,this.data.length-1), 
@@ -16,6 +21,7 @@ module.exports = (function() {
 			}
 
 			return {
+				type: "text",
 				args: [value],
 				length: data.length,
 				data: data

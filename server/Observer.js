@@ -9,12 +9,13 @@ module.exports = (function() {
 		 * @returns {object}     Returns self to make constructor chainable.
 		 */
 		constructor: function() {
+			this.events = {};
 			return this;
 		},
 		/**
-		 * events, indexed by name
+		 * @property {object} events  events bound to this object, indexed by name
 		 */
-		events: {},
+		events: null,
 		/**
 		 * Subscribes an event handler for the given event.
 		 * 

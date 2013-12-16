@@ -64,8 +64,8 @@ assembler = (function() {
 			this.compiler.addDirective("word", new WordDirective(this.compiler));
 			
 			// add some output types to compiler (more can be added)
-			this.compiler.addOutput("raw", new RawOutput());
-			this.compiler.addOutput("humanreadable", new HumanreadableOutput());
+			this.compiler.addOutput("raw", new RawOutput(this.compiler));
+			this.compiler.addOutput("humanreadable", new HumanreadableOutput(this.compiler));
 			// all error message and warnings even infos goes through log event,
 			// so needs to be listen to it.
 			this.compiler.on("log", this.onLog, this);
@@ -118,6 +118,10 @@ assembler.init({
 	outputMode: process.argv[4],
 	scope: this,
 	callback: function() {
-		console.info(assembler.compile());
+//		try {
+			util.puts(assembler.compile());
+//		} catch(e) {
+			console.info(e);
+//		}
 	}
 });

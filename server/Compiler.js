@@ -40,30 +40,55 @@ module.exports = (function() {
 		TYPE_ASSIGNMENT = "Assignment",
 		TYPE_OPCODE = "Opcode",
 		TYPE_EMPTY = "Empty",
-		TYPE_UNDEFINED = "Undefined";
+		TYPE_UNDEFINED = "Undefined",
 		
 		OPERATOR_MAP = {
 			"+": "Add",
 			"-": "Sub"
 		};
+		
+	function errorMsg(msg, identifier, line) {
+		return msg + "'" + identifier + "' in line #" + this.currentLine + ": " + line;
+	}
+		
 
-	return Util.extend(Observer, {
+	var CompilerClass = Util.extend(Observer, {
 		constructor: function(config) {
+			CompilerClass.superclass.constructor.call(this);
+			
 			this.init(config);
 		},
 
 		/** 
-		 * @var {number} pc     Program counter: contains the current position 
-		 *                       of the program counter during compiling
+		 * @property {number} pc     Program counter: contains the current position 
+		 *                           of the program counter during compiling
 		 */ 
 		pc: undefined,
 		/** 
-		 * @var {number} currentLine     Program counter: contains the current 
-		 *                                line number during compiling
+		 * @property {number} currentLine     Program counter: contains the current 
+		 *                                    line number during compiling
 		 */ 
 		currentLine: undefined,
 		/**
-		 * Initializes compiler
+		 * @property {object} outputs         key-value pairs that contains
+		 *                                    all type of outputs that can
+		 *                                    generate different kinds of outputs,
+		 *                                    indexed by output type
+		 */
+		outputs: undefined,
+		/**
+		 * @property {object} directives      key-value pairs containing all
+		 *                                    the directives, indexed by name
+		 */
+		directives: undefined,
+		/**
+		 * @property {object} opcodes         opcodes @see Opcode.js
+		 */
+		opcodes: undefined,
+
+		/**
+		 * Initializes compiler: resets permanent properties such as defaultStart
+		 * opcodes, directives etc.
 		 * 
 		 * @param {object} config
 		 * @returns {undefined}
@@ -71,14 +96,12 @@ module.exports = (function() {
 		init: function(config) {
 			/** @var {object} config     is permanent, so are saved into this.config */
 			this.config = config;
-			this.memory = new Int8Array();
 			
 			this.defaultStart = config.defaultStart || 0x1000;	// defaultStart: if no pc defined, use $1000
-			this.currentLine = undefined;                       // the currently processed line during compiling
-			this.opcodes = config.opcodes || Opcode;            // all existing opcodes
-			this.directives = {};                               // directive objects
-			this.output = undefined;                            // generated code in bytes
-			this.outputs = {};                                  // output generator objects
+			this.currentLine = undefined;
+			this.opcodes = config.opcodes || Opcode;
+			this.directives = {};
+			this.outputs = {};
 		},
 				
 		/**
@@ -91,6 +114,19 @@ module.exports = (function() {
 		addDirective: function(name, directiveObj) {
 			this.directives[name] = directiveObj;
 			return this;
+		},
+		
+		/**
+		 * Returns all installed directive
+		 * 
+		 * @returns {undefined}
+		 */		
+		getDirectives: function() {
+			return this.directives;
+		},
+				
+		getDirective: function(name) {
+			return this.directives[name];
 		},
 				
 		/**
@@ -105,7 +141,7 @@ module.exports = (function() {
 			return this;
 		},
 		/**
-		 * Compiles any string into byte code using this.opcodes
+		 * Compiles any string into byte code using this.opcodes.
 		 * 
 		 * @param {string} text       text to compile
 		 * @returns {object}          self
@@ -118,12 +154,13 @@ module.exports = (function() {
 			// pc starts from the default
 			this.pc = this.defaultStart;
 			// the lowest address in this compilation
-			this.minAddress = this.pc;
+			this.minAddress = 0x10000;
 			// the highest memory Address in this compilation
 			this.maxAddress = this.pc;
 			// clear data and output
 			this.data = [];
-			this.output = [];
+			// output size is always $10000, since this is a c64 assembler
+			this.output = new Int8Array(0x10000);
 			
 			var startTime = new Date;
 			// passes 
@@ -157,14 +194,15 @@ module.exports = (function() {
 					fnName;
 				
 				this.data[i] = lineData = {
-					line: line,            // the whole line as string
-					pc: this.pc,           // program counter in the line
-					length: undefined,     // how long as a machine code
-					type: parts.type,      // is this an empty line?
+					line: line,               // the whole line as string
+					pc: this.pc,              // program counter in the line
+					length: undefined,        // how long as a machine code
+					type: parts.type,         // is this an empty line?
 					directiveData: undefined, // only set, when directive present in the current line
-					opcodeData: undefined, // only set, when opcode is present in the current line
-					parts: parts,          // part of the line, separated by function
-					code: undefined        // actual machine code
+					opcodeData: undefined,    // only set, when opcode is present in the current line
+					pcData: undefined,        // only set, when pc (*) data is present in the current line
+					parts: parts,             // part of the line, separated by function
+					code: undefined           // actual machine code
 				};
 				
 				// call the function according to the line type
@@ -180,7 +218,8 @@ module.exports = (function() {
 		 * @returns {undefined}
 		 */
 		pass0PC: function(lineData) {
-			this.pc = lineData.pc = this.evalExpression(lineData.parts.args).value;
+			this.pc = this.evalExpression(lineData.parts.args).value;
+			lineData.pc = this.pc;
 		},
 		/**
 		 * Identifier resolution, pass0. Identifier will not get necessarily resolved,
@@ -218,8 +257,6 @@ module.exports = (function() {
 				
 				fnName = "pass1" + lineData.parts.type;
 				this[fnName] && this[fnName](lineData);
-				
-				// TODO: pass1Directive-t megcsinalni, mert a directive utani labelek nem lesznek jok;
 			}
 		},	
 		/**
@@ -229,8 +266,8 @@ module.exports = (function() {
 		 * @returns {undefined}
 		 */
 		pass1PC: function(lineData) {
-			lineData.pc = this.pc;
 			this.pc = this.evalExpression(lineData.parts.args).value;
+			lineData.pc = this.pc;
 		},
 		/**
 		 * Pass1 sub: Processes opcode
@@ -249,7 +286,33 @@ module.exports = (function() {
 		},
 		
 		/**
-		 * Pass2: resolves all identifiers, stops when unable to do it.
+		 * Calculates directive length
+		 * 
+		 * @param {object} lineData    data for the currently processed line
+		 * @returns {undefined}
+		 */
+		pass1Directive: function(lineData) {
+			var directiveClassName = lineData.parts.code.substr(1),
+				directive = this.directives[directiveClassName],
+				length;
+			
+			lineData.directiveData = {
+				type: directiveClassName
+			};
+			
+			if (directive) {
+				directive.setData(lineData.parts.args);
+				
+				length = directive.getLength();
+			} else {
+				throw new Error(errorMsg("Unknown identifier",directiveClassName, lineData.line));
+			}
+			
+			this.pc += length;
+		},
+				
+		/**
+		 * Pass2: resolves all identifiers, stops on error.
 		 * 
 		 * @returns {undefined}
 		 */
@@ -285,8 +348,14 @@ module.exports = (function() {
 		 * @returns {undefined}
 		 */
 		pass3PC: function(lineData) {
-			lineData.pc = this.pc;
+			// calculate current program counter
 			this.pc = this.evalExpression(lineData.parts.args).value;
+			// save into lineData (as lineData is a reference to this.lines)
+			lineData.pc = this.pc;
+			// pcData is the calculated pc value
+			lineData.pcData = {
+				address: this.pc
+			};
 		},
 				
 		/**
@@ -324,7 +393,7 @@ module.exports = (function() {
 				
 				var parsed = directive.parse();
 				
-				lineData.directiveData = parsed;
+				lineData.directiveData = Util.apply(lineData.directiveData, parsed);
 			
 				this.pc += parsed.length;
 			} else {
@@ -338,8 +407,7 @@ module.exports = (function() {
 		 * @returns {unresolved}
 		 */
 		pass4: function() {
-			var output = [],
-				lineData,
+			var lineData,
 				fnName;
 		
 			for (var i = 0, len = this.lines.length; i < len; i++) {
@@ -349,8 +417,6 @@ module.exports = (function() {
 				fnName = "pass4" + lineData.parts.type;
 				this[fnName] && this[fnName](lineData);
 			}
-			
-			return this.output;
 		},
 		/**
 		 * Pass4 sub: get&add Opcode data
@@ -358,7 +424,21 @@ module.exports = (function() {
 		 * @returns {undefined}
 		 */
 		pass4Opcode: function(lineData) {
-			this.output = this.output.concat(lineData.opcodeData.data);
+			for (var i = 0, len = lineData.opcodeData.length; i < len; i++) {
+				/*DEBUG*/
+				if (!lineData.opcodeData.data) {
+					throw new Error("Compiler error: missing data")
+				}
+				/*/DEBUG*/
+				
+				// error handling
+				if (lineData.opcodeData.argValue === undefined) {
+					throw new Error("Unable to resolve expression:'" + lineData.opcodeData.arg + "' in line#" + this.currentLine + ": " + lineData.line);
+				}
+				this.output[lineData.pc + i] = lineData.opcodeData.data[i];
+			}
+			
+			this.setAddressBoundaries(lineData.pc, lineData.pc + lineData.opcodeData.length - 1);
 		},
 		/**
 		 * Pass4 sub: get&add Directive data
@@ -366,7 +446,27 @@ module.exports = (function() {
 		 * @returns {undefined}
 		 */
 		pass4Directive: function(lineData) {
-			this.output = this.output.concat(lineData.directiveData.data);
+			//this.output = this.output.concat(lineData.directiveData.data);
+			for (var i = 0, len = lineData.directiveData.length; i < len; i++) {
+				/*DEBUG*/
+				if (!lineData.directiveData.data) {
+					throw new Error(errorMsg("Compiler error", "", lineData.line));
+				}
+				/*/DEBUG*/
+				this.output[lineData.pc + i] = lineData.directiveData.data[i];
+			}
+			
+			this.setAddressBoundaries(lineData.pc, lineData.pc + lineData.directiveData.length - 1 );
+		},
+				
+		setAddressBoundaries: function(min, max) {
+			if (this.minAddress > min) {
+				this.minAddress = min
+			};
+			
+			if (this.maxAddress < max) {
+				this.maxAddress = max;
+			};
 		},
 				
 		generate: function(outputType) {
@@ -396,6 +496,11 @@ module.exports = (function() {
 				argLength = valueData.length,
 				opInfo = this.opcodes[opcode],
 				result;
+			
+			if (opInfo === undefined) {
+				console.info(this);
+				throw new Error(errorMsg("Unknown opcode", opcode, ""));
+			}
 			
 			if (addressingMode === "ABS") {
 				if (opInfo[Opcode.AddressingMode.ABS.index] === 0x00) {
@@ -477,6 +582,9 @@ module.exports = (function() {
 				match = matchIMP || matchIMM || matchABSX || matchABSY || matchIND || matchINDX || matchINDY  || matchABS,
 				type;
 		
+			if (!match) {
+				console.info("no matching addressing mode:" + code);
+			}
 			if (matchIMP) { type = "IMP"; }
 			else if (matchIMM) { type = "IMM"; arg = matchIMM[1]; }
 			else if (matchABSX) { type = "ABSX"; arg = matchABSX[1]; }
@@ -566,8 +674,7 @@ module.exports = (function() {
 			var codeParts = RX_CODESPLITTER.exec(str);
 			
 			if(codeParts === null) { 
-				this.log("Unable to process line:>"+str+"<", 0);
-				throw new Error("Unable to process line: ", ">"+str+"<");
+				throw new Error(errorMsg("Unable to process line", str, ""));
 			}
 
 			return {
@@ -658,8 +765,7 @@ module.exports = (function() {
 				length;
 			
 			if(valueParts === null) {
-				console.info("Value cannot be processed", value);
-				throw new Error("value cannot be processed:" + value, this.currentLine);
+				throw new Error(errorMsg("Value cannot be processed", value, ""));
 			}
 			// hexa
 			if (valueParts[4] !== undefined) {
@@ -697,7 +803,7 @@ module.exports = (function() {
 				
 		/**
 		 * Sets an identifier defined by its name. Also stores the original
-		 * expression for later use. (if identifier cannot be resolved,
+		 * expression for later use. (if the identifier cannot be resolved,
 		 * needs to be calculated later)
 		 * 
 		 * @param {type} id
@@ -715,7 +821,7 @@ module.exports = (function() {
 		},
 		
 		/**
-		 * returns an identifier, if not exist returns an empty object, length
+		 * returns an identifier, if doesn't exist, returns an empty object, length
 		 * is set to 2 (needed in pass1)
 		 * 
 		 * @param {type} id
@@ -745,4 +851,6 @@ module.exports = (function() {
 			}
 		}
 	});
+	
+	return CompilerClass;
 })();

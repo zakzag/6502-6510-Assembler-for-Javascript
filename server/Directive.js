@@ -18,13 +18,17 @@ module.exports = (function() {
 		setData: function(data) {
 			this.data = data;
 		},
+				
+		getLength: function() {
+			throw new Error("Abstract function called: getLength");
+		},
 		validate: function() {
 			var matches = this.data.match(this.validRx);
 			
 			return matches !== null;
 		},
 		parse: function() {
-			throw new Error("not implemented function: length for directive:" + this.name);
+			throw new Error("not implemented function: parse   for directive:" + this.name);
 		}
 	});
 })();

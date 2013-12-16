@@ -8,6 +8,11 @@ module.exports = (function() {
 			ByteClass.superclass.constructor.call(this, 'Byte', compiler);
 		},
 		rx: /^.*$/i,
+		
+		getLength: function() {
+			return this.data.split(this.splitterRx).length;
+		},
+		
 		parse: function() {
 			var items = this.data.split(this.splitterRx),
 				evaldItems = [];
@@ -26,6 +31,7 @@ module.exports = (function() {
 			}, this);
 
 			return {
+				type: "byte",
 				args: items,
 				length: evaldItems.length,
 				data: evaldItems

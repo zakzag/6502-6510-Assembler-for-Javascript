@@ -52,6 +52,7 @@ xout:
 	tax
 	rts
 
+* = $c200
 bobot: 
 	.text " BOTTLES OF BEER ON THE WALL"
 bobpa: 
