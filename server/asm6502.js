@@ -92,9 +92,7 @@ assembler = (function() {
 			this.log(msgData.message);
 		},
 				
-		onFatalError: function(msgData) {
-			var msg = msgData.message + "   (" + msgData.text + ") in line #" + msgData.line;
-			this.log(msg);
+		onFatalError: function(msg) {
 			throw new Error(msg);
 		},
 
@@ -118,10 +116,10 @@ assembler.init({
 	outputMode: process.argv[4],
 	scope: this,
 	callback: function() {
-//		try {
+		try {
 			util.puts(assembler.compile());
-//		} catch(e) {
+		} catch(e) {
 			console.info(e);
-//		}
+		}
 	}
 });

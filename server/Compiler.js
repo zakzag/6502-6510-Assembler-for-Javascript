@@ -7,6 +7,7 @@ var Observer = require("./Observer");
 var Opcode = require("./Opcode");
 var Directive = require("./Directive");
 var Output = require("./Output");
+var util = require('util');
 
 module.exports = (function() {
 	//  Regular expressions to verify and split code
@@ -47,11 +48,6 @@ module.exports = (function() {
 			"-": "Sub"
 		};
 		
-	function errorMsg(msg, identifier, line) {
-		return msg + "'" + identifier + "' in line #" + this.currentLine + ": " + line;
-	}
-		
-
 	var CompilerClass = Util.extend(Observer, {
 		constructor: function(config) {
 			CompilerClass.superclass.constructor.call(this);
@@ -177,7 +173,7 @@ module.exports = (function() {
 			for (var i in this.identifiers) { idCount++; };
 			this.log("lines:" + this.currentLine + ", identifiers: " + idCount + " compiled in " + duration+"ms.", 1);
 			this.log("done.", 1);
-			
+			this.log(this.identifiers);
 			return this;
 		},
 		/**
@@ -305,7 +301,7 @@ module.exports = (function() {
 				
 				length = directive.getLength();
 			} else {
-				throw new Error(errorMsg("Unknown identifier",directiveClassName, lineData.line));
+				this.throwError("Unknown identifier", directiveClassName, lineData.line);
 			}
 			
 			this.pc += length;
@@ -317,12 +313,37 @@ module.exports = (function() {
 		 * @returns {undefined}
 		 */
 		pass2: function() {
-			for (var identifierName in this.identifiers) {
-				var identifier = this.identifiers[identifierName];
-				if (isNaN(identifier.value) || identifier.value === undefined) {
-					this.setIdentifier(identifierName, this.evalExpression(identifier.expression));
+			var ix = 0,
+				name;
+			// there's a built-in limit: maximum depth of resolution is limited to 10, 
+			// so pass2 will end 
+			
+			// @todo: finish, something wrong but almost done
+			while (this.getUnresolvedIdentifier() || ix++ < 10) {
+				util.print(".",ix,this.getUnresolvedIdentifier());
+				for (var identifierName in this.identifiers) {
+					var identifier = this.identifiers[identifierName];
+					if (isNaN(identifier.value) || identifier.value === undefined) {
+						this.setIdentifier(identifierName, this.evalExpression(identifier.expression).value, identifier.length, identifier.expression);
+					}
 				}
 			}
+			name = this.getUnresolvedIdentifier();
+			console.info("name=",name)
+			if(name === false) {
+				this.throwError("Unresolvable identifier:", name);
+			}
+		},
+				
+		getUnresolvedIdentifier: function() {
+			for (var idName in this.identifiers) {
+				var id = this.identifiers[idName];
+				if (id.value === undefined || isNaN(id.value)) {
+					return idName;
+				}
+			}
+			
+			return false;
 		},
 		/**
 		 * Pass3: finalize opcode arguments (replaces identifiers resolved in pass2)
@@ -372,7 +393,7 @@ module.exports = (function() {
 			var opcodeData = this.getOpcodeData(opcode, args);
 			
 			// if value cannot get calculated and addressing mode requires a value, throw an error.
-			isNaN(opcodeData.argValue) && (opcodeData.addressingMode !== Opcode.AddressingMode.IMP.shortName) && this.log("invalid expression:" + opcodeData.arg, 0);
+			isNaN(opcodeData.argValue) && (opcodeData.addressingMode !== Opcode.AddressingMode.IMP.shortName) && this.throwError("invalid expression", opcodeData.arg, "");
 				
 			lineData.opcodeData = opcodeData;
 			this.pc +=  opcodeData.length;
@@ -397,8 +418,7 @@ module.exports = (function() {
 			
 				this.pc += parsed.length;
 			} else {
-				console.info("no such directive installed:", lineData.parts.code.substr(1));
-				// error handling: no such directive installed
+				this.throwError("no such directive installed", lineData.parts.code.substr(1));
 			}
 		},
 		/**
@@ -427,7 +447,7 @@ module.exports = (function() {
 			for (var i = 0, len = lineData.opcodeData.length; i < len; i++) {
 				/*DEBUG*/
 				if (!lineData.opcodeData.data) {
-					throw new Error("Compiler error: missing data")
+					this.throwError("Compiler error: missing data", "", "");
 				}
 				/*/DEBUG*/
 				
@@ -450,7 +470,7 @@ module.exports = (function() {
 			for (var i = 0, len = lineData.directiveData.length; i < len; i++) {
 				/*DEBUG*/
 				if (!lineData.directiveData.data) {
-					throw new Error(errorMsg("Compiler error", "", lineData.line));
+					this.throwError("Compiler error", "", lineData.line);
 				}
 				/*/DEBUG*/
 				this.output[lineData.pc + i] = lineData.directiveData.data[i];
@@ -475,8 +495,7 @@ module.exports = (function() {
 			if(outputGenerator instanceof Output) {
 				return outputGenerator.parse(this.data, this.output);
 			} else {
-				console.info("no such output type:", outputType);
-				// error handling
+				this.throwError("no such output type:", outputType);
 			}
 		},
 		/**
@@ -498,8 +517,7 @@ module.exports = (function() {
 				result;
 			
 			if (opInfo === undefined) {
-				console.info(this);
-				throw new Error(errorMsg("Unknown opcode", opcode, ""));
+				this.throwError("Unknown opcode", opcode, "");
 			}
 			
 			if (addressingMode === "ABS") {
@@ -508,7 +526,7 @@ module.exports = (function() {
 						addressingMode = "REL";
 					} else {
 						// error
-						this.log("Invalid addressing mode", 0);
+						this.throwError("Invalid addressing mode", opcode, args);
 					};
  				} else {
 					if (argLength === 1) {
@@ -522,12 +540,12 @@ module.exports = (function() {
 				
 				if (this.pc < value) {
 					if (value - this.pc > 127) {
-						this.log("Relative addressing allowes only 128bytes backjump.", 0);
+						this.throwError("Relative addressing allowes only 128bytes backjump.", opcode, args);
 					}
 					value -= this.pc;
 				} else {
 					if (value-this.pc < -128) {
-						this.log("Relative addressing allowes only 127bytes jump.", 0);
+						this.throwError("Relative addressing allowes only 127bytes jump.", opcode, args);
 					}
 					value = 0xff - (this.pc - value);
 				};
@@ -555,7 +573,7 @@ module.exports = (function() {
 				data: []
 			};
 			
-			argLength === 2 && value > 0xffff && this.log("Operand overflow: "+ value, 0);
+			argLength === 2 && value > 0xffff && this.throwError("Operand overflow: ", value, "");
 			
 			result.data.push(opInfo[Opcode.AddressingMode[addressingMode].index]);
 			argLength >= 1 && result.data.push(value & 0xff);
@@ -583,7 +601,7 @@ module.exports = (function() {
 				type;
 		
 			if (!match) {
-				console.info("no matching addressing mode:" + code);
+				this.throwError("no matching addressing mode",code);
 			}
 			if (matchIMP) { type = "IMP"; }
 			else if (matchIMM) { type = "IMM"; arg = matchIMM[1]; }
@@ -645,7 +663,7 @@ module.exports = (function() {
 					codeParts;
 
 				if (parts === null) {
-					this.log("unable to process line: '" + line + "'" , 0);
+					this.throwError("unable to process line", line, "");
 				}
 
 				codeParts = this.splitCode(parts[2]);
@@ -674,7 +692,7 @@ module.exports = (function() {
 			var codeParts = RX_CODESPLITTER.exec(str);
 			
 			if(codeParts === null) { 
-				throw new Error(errorMsg("Unable to process line", str, ""));
+				this.throwError("Unable to process line", str, "");
 			}
 
 			return {
@@ -698,7 +716,7 @@ module.exports = (function() {
 				firstExpr = exprParts[0],
 				hiLoSelector = this.getHiLoSelector(firstExpr) ? firstExpr[0][0] : undefined;
 			
-			exprParts === null && this.log("invalid expression", 0);
+			exprParts === null && this.throwError("invalid expression", "", "");
 			resultData = this.evalValue(hiLoSelector ? firstExpr.substr(1)  : exprParts[0]);
 			
 			for (var i = 1, len = exprParts.length; i < len; i++) {
@@ -765,7 +783,7 @@ module.exports = (function() {
 				length;
 			
 			if(valueParts === null) {
-				throw new Error(errorMsg("Value cannot be processed", value, ""));
+				this.throwError("Value cannot be processed", value, "");
 			}
 			// hexa
 			if (valueParts[4] !== undefined) {
@@ -788,11 +806,12 @@ module.exports = (function() {
 				result = resultData.value;
 				length = resultData.length;
 			} else {
-				this.log("illegal value: " + value, 0);
+				this.throwError("illegal value", value, "");
 			};
 			
+			
 			if (typeof length !== "number") {
-				this.log("expression has no value.", 0);
+				this.throwError("Expression has no value.", "", "");
 			}
 
 			return {
@@ -813,6 +832,10 @@ module.exports = (function() {
 		 * @returns {undefined}
 		 */
 		setIdentifier: function(id, value, length, expression) {
+			if (this.identifiers[id] && this.identifiers[id].value) {
+				this.throwError("Duplicate identifier", id, "");
+			}
+			
 			this.identifiers[id] = {
 				value: value,
 				length: length,
@@ -833,6 +856,10 @@ module.exports = (function() {
 			return idData ? idData : { value: undefined, length: 2, expression: undefined };
 		},
 				
+		throwError: function(msg, identifier, line) {
+			this.fire("fatal", msg + "'" + identifier + "' in line #" + this.currentLine +  (line?": ":"") + (line || ""));
+		},
+				
 		log: function(message, level) {
 			level = level || 1;
 
@@ -843,12 +870,7 @@ module.exports = (function() {
 				level: level || 2
 			};
 			
-			if (level === 0) {
-				this.fire("fatal", msgData);
-				throw new Error(message + "in line #"+ this.currentLine);
-			} else {
-				this.fire("log", msgData);
-			}
+			this.fire("log", msgData);
 		}
 	});
 	
