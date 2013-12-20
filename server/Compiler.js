@@ -174,7 +174,6 @@ module.exports = (function() {
 			this.log("lines:" + this.currentLine + ", identifiers: " + idCount + " compiled in " + duration+"ms.", 1);
 			this.log("done.", 1);
 			this.log(this.identifiers);
-			return this;
 		},
 		/**
 		 * Pass #0: Preprocess identifiers
@@ -319,8 +318,7 @@ module.exports = (function() {
 			// so pass2 will end 
 			
 			// @todo: finish, something wrong but almost done
-			while (this.getUnresolvedIdentifier() || ix++ < 10) {
-				util.print(".",ix,this.getUnresolvedIdentifier());
+			while (this.getUnresolvedIdentifier() && ix++ < 10) {
 				for (var identifierName in this.identifiers) {
 					var identifier = this.identifiers[identifierName];
 					if (isNaN(identifier.value) || identifier.value === undefined) {
@@ -329,8 +327,7 @@ module.exports = (function() {
 				}
 			}
 			name = this.getUnresolvedIdentifier();
-			console.info("name=",name)
-			if(name === false) {
+			if(name !== false) {
 				this.throwError("Unresolvable identifier:", name);
 			}
 		},

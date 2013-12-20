@@ -76,7 +76,26 @@ module.exports = (function() {
                 var p = origclass.prototype;
                 UtilClass.apply(p, overrides);
             }
-        }
+        },
+		/**
+		 * processes input arguments, an argument look like this:
+		 * arg:value 
+		 * a string (key) followed by a semicolon and another string (value)
+		 * This means that only one key of the same name can exist in the list
+		 * 
+		 * @param {type} args          Argument list to process.
+		 * @returns {object}           Key value pairs of args.
+		 */
+		processArgs: function(args) {
+			var result = {};
+			
+			args.forEach(function(item) {
+				var parts = item.split(":");
+				result[parts[0]] = parts[1];
+			});
+			
+			return result;
+		}
     };
 
     return UtilClass;

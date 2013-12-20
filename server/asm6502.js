@@ -1,10 +1,12 @@
 /**
  * usage: 
- * node asm6502.js <inputfile> <outputfile> <outputmode>
+ * node asm6502.js i:<inputfile> o:<outputfile> t:<outputmode>
  * 
  */
 var Compiler = require("./Compiler");
 var Opcode = require("./Opcode");
+var Util = require("./Util");
+
 var TextDirective = require("./directive/Text");
 var ByteDirective = require("./directive/Byte");
 var WordDirective = require("./directive/Word");
@@ -14,7 +16,6 @@ var RawOutput = require("./output/Raw");
 var HumanreadableOutput = require("./output/Humanreadable");
 var fs = require('fs');
 var util = require('util');
-
 
 util.puts("6502/6510 Assember for Node.js V0.1.0\n\n");
 /*
@@ -32,6 +33,12 @@ util.puts("6502/6510 Assember for Node.js V0.1.0\n\n");
  * Too lazy to implement cross-browser event handling
  */
 assembler = (function() {
+	var DEFAULT_CONFIG = {
+		i: undefined,
+		o: undefined,
+		t: "raw"
+	};
+	
 	return {
 		inputFile: undefined,
 		outputFile: undefined,
@@ -79,7 +86,7 @@ assembler = (function() {
 		compile: function() {
 			this.compiler.compile(this.inputContent);
 			
-			return this.compiler.generate("humanreadable");
+			return this.compiler.generate("raw");
 		},
 		
 		/**
@@ -110,16 +117,23 @@ assembler = (function() {
  * runs the assember using command line params
  */
 
-assembler.init({
-	inputFile: process.argv[2],
-	outputFile: process.argv[3],
-	outputMode: process.argv[4],
-	scope: this,
-	callback: function() {
-		try {
-			util.puts(assembler.compile());
-		} catch(e) {
-			console.info(e);
+//try {
+	var config = Util.processArgs(process.argv);
+	
+	assembler.init({
+		inputFile: config.i || "",
+		outputFile: config.o || "",
+		outputMode: config.t || "raw",
+		scope: this,
+		callback: function() {
+			try {
+				util.puts(assembler.compile());
+				
+			} catch(e) {
+				console.info(e);
+			}
 		}
-	}
-});
+	});
+//} catch(e) {
+//	console.info(e)
+//}
