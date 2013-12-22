@@ -1,3 +1,8 @@
+/**
+ * 
+ * @type TextDirectiveClass    parses .text directive
+ */
+
 var Util = require("../Util");
 var Directive = require("../Directive");
 

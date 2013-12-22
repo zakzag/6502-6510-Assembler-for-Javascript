@@ -1,3 +1,7 @@
+/**
+ * @type ObserverClass     simple class implementing Observer pattern
+ */
+
 var Util = require("./Util");
 
 module.exports = (function() {

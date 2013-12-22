@@ -1,6 +1,6 @@
 /*
- * Basic functions for the assembler. Implements inheritance and
- * object shallow copy
+ * @type UtilClass: Basic functions for the assembler. Implements inheritance and
+ *                  object shallow copy
  */
 module.exports = (function() {
     var UtilClass = {

@@ -1,3 +1,10 @@
+/**
+ * 
+ * @type JsonOutputClass   Output class for rendering JSON output from source
+ * 
+ * This class returns a string containing an array of bytes
+ */
+
 var Util = require("../Util");
 var Output = require("../Output");
 
@@ -8,7 +15,7 @@ module.exports = (function() {
 		},
 
 		parse: function(data, output) {
-			return new Buffer(output.subarray(this.compiler.minAddress, this.compiler.maxAddress)).toJSON();
+			return JSON.stringify(new Buffer(output.subarray(this.compiler.minAddress, this.compiler.maxAddress)).toJSON());
 		}
 	});
 	

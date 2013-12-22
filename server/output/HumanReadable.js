@@ -1,3 +1,11 @@
+/**
+ * 
+ * @type HumanreadableOutputClass   Output class for rendering output as a
+ *                                  human readable compiled source code 
+ * 
+ * This class returns a string 
+ */
+
 var Util = require("../Util");
 var Output = require("../Output");
 

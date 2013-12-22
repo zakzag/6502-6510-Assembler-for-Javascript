@@ -1,3 +1,8 @@
+/**
+ * 
+ * @type WordDirectiveClass    parses .word directive
+ */
+
 var Util = require("../Util");
 var Directive = require("../Directive");
 

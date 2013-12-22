@@ -2,7 +2,7 @@
  * Directives directs assembler to do specific functions.
  * So far, .text, .word and .byte directives was implemented
  * 
- * @class ASM.Directive / base class for directives
+ * @class Directive / base class for directives
  */
 var Util = require("./Util");
 

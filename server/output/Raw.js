@@ -1,3 +1,10 @@
+/**
+ * 
+ * @type RawOutputClass   Output class for rendering byte code
+ * 
+ * This class returns an Int8Array
+ */
+
 var Util = require("../Util");
 var Output = require("../Output");
 

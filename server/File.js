@@ -1,7 +1,7 @@
 /*
  * File class can read file content into a string and write something into a file.
  * 
- * @class ASM.File / base class for directives
+ * @class File  singleton class
  */
 var Util = require("./Util");
 var fs = require('fs');

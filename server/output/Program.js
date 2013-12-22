@@ -1,3 +1,12 @@
+/**
+ * 
+ * @type ProgramOutputClass   Output class for rendering executable program
+ * 
+ * This class returns a Buffer containing an executable program for emulators
+ * (and for C64 as well). 
+ * The first 2 bytes are the start address of the program
+ */
+
 var Util = require("../Util");
 var Output = require("../Output");
 

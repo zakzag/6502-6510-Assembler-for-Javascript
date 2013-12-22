@@ -1,11 +1,14 @@
-
+/**
+ * 
+ * @type ByteDirectiveClass    parses .byte directive
+ */
 var Util = require("../Util");
 var Directive = require("../Directive");
 
 module.exports = (function() { 
-	var ByteClass = Util.extend(Directive, {
+	var ByteDirectiveClass = Util.extend(Directive, {
 		constructor: function(compiler) {
-			ByteClass.superclass.constructor.call(this, 'Byte', compiler);
+			ByteDirectiveClass.superclass.constructor.call(this, 'Byte', compiler);
 		},
 		rx: /^.*$/i,
 		
@@ -39,5 +42,5 @@ module.exports = (function() {
 		}
 	});
 	
-	return ByteClass;
+	return ByteDirectiveClass;
 })();
