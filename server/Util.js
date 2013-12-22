@@ -15,7 +15,7 @@ module.exports = (function() {
         apply: function(o, c, defaults) {
             // no "this" reference for friendly out of scope calls
             if (defaults) {
-                B.apply(o, defaults);
+                UtilClass.apply(o, defaults);
             }
             if (o && c && typeof c === 'object') {
                 for (var p in c) {

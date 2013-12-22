@@ -8,7 +8,7 @@ module.exports = (function() {
 		},
 
 		parse: function(data, output) {
-			return output;
+			return output.subarray(this.compiler.minAddress, this.compiler.maxAddress);
 		}
 	});
 	

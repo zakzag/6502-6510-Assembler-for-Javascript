@@ -170,10 +170,11 @@ module.exports = (function() {
 			
 			var duration = endTime - startTime;
 			var idCount = 0;
+			
 			for (var i in this.identifiers) { idCount++; };
+			
 			this.log("lines:" + this.currentLine + ", identifiers: " + idCount + " compiled in " + duration+"ms.", 1);
 			this.log("done.", 1);
-			this.log(this.identifiers);
 		},
 		/**
 		 * Pass #0: Preprocess identifiers
@@ -544,7 +545,8 @@ module.exports = (function() {
 					if (value-this.pc < -128) {
 						this.throwError("Relative addressing allowes only 127bytes jump.", opcode, args);
 					}
-					value = 0xff - (this.pc - value);
+					//@TODO: check
+					value = 0xff - (this.pc - value) - 1;
 				};
 			};
 			

@@ -2,10 +2,16 @@
  * usage: 
  * node asm6502.js i:<inputfile> o:<outputfile> t:<outputmode>
  * 
+ * @param {string} inputfile        path to the input file
+ * @param {string} outputfile       path to output file. will be overwritten
+ *                                  if already exists
+ * @param {string} outputmode       list of valid values depend on the installed
+ *                                  output 
  */
 var Compiler = require("./Compiler");
 var Opcode = require("./Opcode");
 var Util = require("./Util");
+var File = require("./File");
 
 var TextDirective = require("./directive/Text");
 var ByteDirective = require("./directive/Byte");
@@ -14,7 +20,8 @@ var WordDirective = require("./directive/Word");
 var Output = require("./Output");
 var RawOutput = require("./output/Raw");
 var HumanreadableOutput = require("./output/Humanreadable");
-var fs = require('fs');
+var ProgramOutput = require("./output/Program");
+var JsonOutput = require("./output/Json");
 var util = require('util');
 
 util.puts("6502/6510 Assember for Node.js V0.1.0\n\n");
@@ -44,26 +51,30 @@ assembler = (function() {
 		outputFile: undefined,
 		inputContent: "",
 		init: function(config) {
+			config = Util.apply({}, config, DEFAULT_CONFIG);
+			
+			var inputFile = config.i,
+				outputFile = config.o,
+				type = config.t;
+			
 			this.compiler = config.compiler || new Compiler({
 				scope: this,
 				opcodes: Opcode.Opcode,
 				outputMode: config.outputMode || "raw"
 			});
 			
-			if(!config.inputFile) {
+			if(!inputFile) {
 				throw new Error("You must specify an input file")
 			}
 			
-			if(!config.outputFile) {
+			if(!outputFile) {
 				throw new Error("You must specify an output file")
 			}
 			
-			this.inputFile = config.inputFile;
-			fs.readFile(config.inputFile, 'utf-8', (function(err, data) {
-				if (err) { throw err; };
-				this.inputContent = data;
-				config.callback instanceof Function && config.callback.call(config.scope, data);
-			}).bind(this));
+			this.inputFile = inputFile;
+			this.outputFile = outputFile;
+			this.type = type;
+			this.inputContent = File.getAsText(inputFile);
 			
 			// add all directives required for compiling (more can be added, if needed)
 			this.compiler.addDirective("text", new TextDirective(this.compiler));
@@ -73,10 +84,14 @@ assembler = (function() {
 			// add some output types to compiler (more can be added)
 			this.compiler.addOutput("raw", new RawOutput(this.compiler));
 			this.compiler.addOutput("humanreadable", new HumanreadableOutput(this.compiler));
+			this.compiler.addOutput("program", new ProgramOutput(this.compiler));
+			this.compiler.addOutput("json", new JsonOutput(this.compiler));
 			// all error message and warnings even infos goes through log event,
 			// so needs to be listen to it.
 			this.compiler.on("log", this.onLog, this);
 			this.compiler.on("fatal", this.onFatalError, this);
+			
+			return this;
 		},
 		/**
 		 * Compiles the text in textEl.
@@ -86,7 +101,12 @@ assembler = (function() {
 		compile: function() {
 			this.compiler.compile(this.inputContent);
 			
-			return this.compiler.generate("raw");
+			return this;
+		},
+				
+		write: function() {
+			var output = this.compiler.generate(this.type);
+			File.write(this.outputFile, output);
 		},
 		
 		/**
@@ -120,20 +140,11 @@ assembler = (function() {
 //try {
 	var config = Util.processArgs(process.argv);
 	
-	assembler.init({
-		inputFile: config.i || "",
-		outputFile: config.o || "",
-		outputMode: config.t || "raw",
-		scope: this,
-		callback: function() {
-			try {
-				util.puts(assembler.compile());
-				
-			} catch(e) {
-				console.info(e);
-			}
-		}
-	});
+	config = Util.apply(config, { scope: this });
+
+	assembler.init(config);
+	assembler.compile();
+	assembler.write();
 //} catch(e) {
 //	console.info(e)
 //}
