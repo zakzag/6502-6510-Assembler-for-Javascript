@@ -1,0 +1,21 @@
+{
+	"version": "0.1.0",
+	"name": "asm6502",
+	"author": {
+		"name": "Tamas Kovari",
+		"email": "tamas.kovari@gmail.com",
+		"url": "voidcomics.tk"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/zakzag/6502-6510-Assembler-for-Javascript"
+  	},
+	"main": "./server/asm6502.js",
+	"engines": {
+		"node": ">=0.8.2",
+		"npm": "1"
+	},
+	"scripts": {
+		"test": "mocha -u tdd -R spec"
+	}
+}
