@@ -24,7 +24,7 @@ module.exports = (function() {
 		RX_OPERATOR_COLLECTOR = /[+\-]/g,
 		RX_DIRECTIVE_SPLITTER = /,/i,
 		RX_VALUE_SPLITTER = /^\s*(((\$)([a-zA-Z0-9]*))|([0-9]*)|(%)([01]*)|([a-zA-Z_0-9]*)|(\*))\s*$/i,
-		RX_LINESPLITTER = /^(?:([^:]*?):)?([^;]*);?(.*)*?$/i,
+		RX_LINESPLITTER = /^(?:([^:\s]*?):)?([^;]*);?(.*)*?$/i,
 		RX_CODESPLITTER = /^\s*((?:[a-zA-Z_][a-zA-z0-9]*?|\*)\s*=|[a-zA-Z]{3}|\.[a-zA-Z]*)\s*(.*)$/i,
 		
 		RX_ADDRTYPE_IMM = /^#(.*)$/i,
@@ -171,7 +171,7 @@ module.exports = (function() {
 			var duration = endTime - startTime;
 			var idCount = 0;
 			
-			for (var i in this.identifiers) { idCount++; };
+			for (var i in this.identifiers) { idCount++; }
 			
 			this.log("lines:" + this.currentLine + ", identifiers: " + idCount + " compiled in " + duration+"ms.", 1);
 			this.log("done.", 1);
@@ -188,7 +188,7 @@ module.exports = (function() {
 					parts = this.splitLine(line),
 					lineData,
 					fnName;
-				
+			
 				this.data[i] = lineData = {
 					line: line,               // the whole line as string
 					pc: this.pc,              // program counter in the line
@@ -354,7 +354,6 @@ module.exports = (function() {
 			
 			for (var i = 0, len = this.lines.length; i < len; i++) {
 				this.currentLine = i;
-				
 				lineData = this.data[i];// atirni each-re
 				fnName = "pass3" + lineData.parts.type;
 				this[fnName] && this[fnName](lineData);
@@ -389,7 +388,6 @@ module.exports = (function() {
 				args = lineData.parts.args;
 		
 			var opcodeData = this.getOpcodeData(opcode, args);
-			
 			// if value cannot get calculated and addressing mode requires a value, throw an error.
 			isNaN(opcodeData.argValue) && (opcodeData.addressingMode !== Opcode.AddressingMode.IMP.shortName) && this.throwError("invalid expression", opcodeData.arg, "");
 				
@@ -479,7 +477,7 @@ module.exports = (function() {
 				
 		setAddressBoundaries: function(min, max) {
 			if (this.minAddress > min) {
-				this.minAddress = min
+				this.minAddress = min;
 			};
 			
 			if (this.maxAddress < max) {
@@ -624,7 +622,7 @@ module.exports = (function() {
 		 * @returns {boolean}
 		 */
 		isEmptyLine: function(line) {
-			return line.match(RX_EMPTYLINE);
+			return line.match(RX_EMPTYLINE) !== null;
 		},
 				
 		/**
@@ -666,7 +664,6 @@ module.exports = (function() {
 				}
 
 				codeParts = this.splitCode(parts[2]);
-
 				return {
 					label: parts[1],
 					code: codeParts.code,
@@ -687,7 +684,7 @@ module.exports = (function() {
 					code: "",
 					args: ""
 				};
-			} 
+			}
 			var codeParts = RX_CODESPLITTER.exec(str);
 			
 			if(codeParts === null) { 
@@ -712,6 +709,7 @@ module.exports = (function() {
 				resultData,
 				partN,
 				valueDataN,
+				operator,
 				firstExpr = exprParts[0],
 				hiLoSelector = this.getHiLoSelector(firstExpr) ? firstExpr[0][0] : undefined;
 			
@@ -719,9 +717,9 @@ module.exports = (function() {
 			resultData = this.evalValue(hiLoSelector ? firstExpr.substr(1)  : exprParts[0]);
 			
 			for (var i = 1, len = exprParts.length; i < len; i++) {
-				var partN = exprParts[i],
-					valueDataN = this.evalValue(partN),
-					operator = operators[i - 1];
+				partN = exprParts[i],
+				valueDataN = this.evalValue(partN),
+				operator = operators[i - 1];
 				
 				// length is always the biggest one
 				resultData.length = valueDataN.length > resultData.length ? valueDataN.length : resultData.length;

@@ -8,7 +8,7 @@
 var Util = require("../Util");
 var Output = require("../Output");
 
-module.exports = (function() { 
+module.exports = (function() {
 	var RawOutputClass = Util.extend(Output, {
 		constructor: function(compiler) {
 			RawOutputClass.superclass.constructor.call(this, 'Raw', compiler);

@@ -137,7 +137,7 @@ assembler = (function() {
  * runs the assember using command line params
  */
 
-//try {
+try {
 	var config = Util.processArgs(process.argv);
 	
 	config = Util.apply(config, { scope: this });
@@ -145,6 +145,6 @@ assembler = (function() {
 	assembler.init(config);
 	assembler.compile();
 	assembler.write();
-//} catch(e) {
-//	console.info(e)
-//}
+} catch(e) {
+	console.info(e)
+}
