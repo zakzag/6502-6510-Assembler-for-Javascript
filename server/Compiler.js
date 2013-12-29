@@ -194,6 +194,7 @@ module.exports = (function() {
 					pc: this.pc,              // program counter in the line
 					length: undefined,        // how long as a machine code
 					type: parts.type,         // is this an empty line?
+					data: undefined,
 					directiveData: undefined, // only set, when directive present in the current line
 					opcodeData: undefined,    // only set, when opcode is present in the current line
 					pcData: undefined,        // only set, when pc (*) data is present in the current line
@@ -277,7 +278,7 @@ module.exports = (function() {
 				args = lineData.parts.args;
 		
 			var opcodeData = this.getOpcodeData(opcode, args);
-			lineData.opcodeData = opcodeData;
+			lineData.data = opcodeData;
 			this.pc +=  opcodeData.length;
 		},
 		
@@ -391,7 +392,7 @@ module.exports = (function() {
 			// if value cannot get calculated and addressing mode requires a value, throw an error.
 			isNaN(opcodeData.argValue) && (opcodeData.addressingMode !== Opcode.AddressingMode.IMP.shortName) && this.throwError("invalid expression", opcodeData.arg, "");
 				
-			lineData.opcodeData = opcodeData;
+			lineData.data = opcodeData;
 			this.pc +=  opcodeData.length;
 		},
 				
@@ -440,21 +441,21 @@ module.exports = (function() {
 		 * @returns {undefined}
 		 */
 		pass4Opcode: function(lineData) {
-			for (var i = 0, len = lineData.opcodeData.length; i < len; i++) {
+			for (var i = 0, len = lineData.data.length; i < len; i++) {
 				/*DEBUG*/
-				if (!lineData.opcodeData.data) {
+				if (!lineData.data.data) {
 					this.throwError("Compiler error: missing data", "", "");
 				}
 				/*/DEBUG*/
 				
 				// error handling
-				if (lineData.opcodeData.argValue === undefined) {
-					throw new Error("Unable to resolve expression:'" + lineData.opcodeData.arg + "' in line#" + this.currentLine + ": " + lineData.line);
+				if (lineData.data.argValue === undefined) {
+					throw new Error("Unable to resolve expression:'" + lineData.data.arg + "' in line#" + this.currentLine + ": " + lineData.line);
 				}
-				this.output[lineData.pc + i] = lineData.opcodeData.data[i];
+				this.output[lineData.pc + i] = lineData.data.data[i];
 			}
 			
-			this.setAddressBoundaries(lineData.pc, lineData.pc + lineData.opcodeData.length - 1);
+			this.setAddressBoundaries(lineData.pc, lineData.pc + lineData.data.length - 1);
 		},
 		/**
 		 * Pass4 sub: get&add Directive data

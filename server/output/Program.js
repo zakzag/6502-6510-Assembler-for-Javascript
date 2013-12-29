@@ -19,7 +19,7 @@ module.exports = (function() {
 		parse: function(data, output) {
 			var addressBuffer = new Buffer(2);
 			addressBuffer.writeUInt16LE(this.compiler.minAddress, 0);
-			var dataBuffer = new Buffer(output.subarray(this.compiler.minAddress, this.compiler.maxAddress));
+			var dataBuffer = new Buffer(output.subarray(this.compiler.minAddress, this.compiler.maxAddress + 1));
 			
 			return Buffer.concat([addressBuffer, dataBuffer]);
 		}
