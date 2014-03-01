@@ -1,6 +1,7 @@
-/*
- * @type UtilClass: Basic functions for the assembler. Implements inheritance and
- *                  object shallow copy
+/**
+ * UtilClass is a set of basic functions for the assembler. 
+ * Implements inheritance and object shallow copy
+ * @class 
  */
 module.exports = (function() {
     var UtilClass = {
@@ -24,6 +25,12 @@ module.exports = (function() {
             }
             return o;
         },
+		/**
+		 * Implements class inheritance. Usage:
+		 * MyClass = Util.extend(ParentClass, members) 
+		 * 
+		 * @public
+		 */
         extend: function() {
             // inline overrides
             var io = function(o) {
@@ -70,7 +77,16 @@ module.exports = (function() {
 
                 return sb;
             };
-        }(),	
+        }(),
+		
+		/**
+		 * Overrides existing methods and properties of a class.
+		 * 
+		 * @public
+		 * @param {function} origclass   Original class function
+		 * @param {object} overrides     List of members
+		 * @returns {undefined}
+		 */
         override: function(origclass, overrides) {
             if (overrides) {
                 var p = origclass.prototype;
@@ -78,12 +94,13 @@ module.exports = (function() {
             }
         },
 		/**
-		 * processes input arguments, an argument look like this:
+		 * Processes command line arguments, an argument looks like this:
 		 * arg:value 
 		 * a string (key) followed by a semicolon and another string (value)
 		 * This means that only one key of the same name can exist in the list
 		 * 
 		 * @param {type} args          Argument list to process.
+		 * 
 		 * @returns {object}           Key value pairs of args.
 		 */
 		processArgs: function(args) {

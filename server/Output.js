@@ -9,13 +9,28 @@ var Util = require("./Util");
 module.exports = (function() {
 	return Util.extend(Object, {
 		/** 
-		 * @field {CompilerClass} compiler     reference to the containing compiler
+		 * Reference to the containing compiler. A Required field.
+		 * @public
+		 * @type {CompilerClass} 
 		 */
 		compiler: null,
+		
 		/**
-		 * @field {string} name                name of this Output class
+		 * Name of this Output class
+		 * 
+		 * @public
+		 * @type {string} 
 		 */
 		name: undefined,
+		
+		/**
+		 * @constructor  Creates a new output object.
+		 * 
+		 * @param {string}   name      Name of the output type.
+		 * @param {Compiler} compiler  Reference to the compiler.
+		 * 
+		 * @returns {undefined}
+		 */
 		constructor: function(name, compiler) {
 			this.name = name;
 			this.compiler = compiler;

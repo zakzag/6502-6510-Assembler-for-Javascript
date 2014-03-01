@@ -16,6 +16,8 @@
 		"npm": "1"
 	},
 	"scripts": {
-		"test": "mocha -u tdd -R spec"
+		"test": "mocha -u tdd -R spec",
+		"jsdoc": "jsdoc -d ./docs -c ./config/jsdoc.json -r",
+		"jslint": "jslint ./server/asm6502.js --node --white --plusplus --bitwise --"
 	}
 }

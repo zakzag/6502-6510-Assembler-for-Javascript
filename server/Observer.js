@@ -1,5 +1,5 @@
 /**
- * @type ObserverClass     simple class implementing Observer pattern
+ * @class ObserverClass     Simple class that implements Observer pattern.
  */
 
 var Util = require("./Util");
@@ -8,8 +8,7 @@ module.exports = (function() {
 	"use srtict";
 	var ObserverClass = Util.extend(Object, {
 		/**
-		 * constructor: empty, does nothing yet
-		 * 
+		 * @constructor Initializes the class by emptying events. Chainable.
 		 * @returns {object}     Returns self to make constructor chainable.
 		 */
 		constructor: function() {
@@ -17,11 +16,13 @@ module.exports = (function() {
 			return this;
 		},
 		/**
-		 * @property {object} events  events bound to this object, indexed by name
+		 * Events bound to this object, indexed by name.
+		 * @type {object} 
+		 * @public
 		 */
 		events: null,
 		/**
-		 * Subscribes an event handler for the given event.
+		 * Subscribes an event handler for the given event. Chainable.
 		 * 
 		 * @param {string} eventName   Name of the event.
 		 * @param {function} fn        Event handler function.
@@ -40,8 +41,9 @@ module.exports = (function() {
 			return this;
 		},
 		/**
-		 * Unsubscribes event handler from the given event.
+		 * Unsubscribes event handler from the given event. Chainable.
 		 * 
+		 * @public
 		 * @param {string} eventName      Event name.
 		 * @param {function} fn           Function to be called when event was triggered.
 		 * @returns {object}              Returns self to make function chainable.
@@ -58,6 +60,7 @@ module.exports = (function() {
 		/**
 		 * Fires an event, sends data as param of the eventhandler.
 		 * 
+		 * @public
 		 * @param {string} eventName        Event name.
 		 * @param {mixed} data              Any data (primitives, objects).
 		 * @returns {object}                Returns self to make function chainable.

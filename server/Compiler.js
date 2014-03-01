@@ -10,8 +10,15 @@ var Output = require("./Output");
 var util = require('util');
 
 module.exports = (function() {
+	"use strict";
 	//  Regular expressions to verify and split code
+		/**
+		 * Check whether the line is an empty line or not
+		 * @type {RegExp}
+		 * @private
+		 */
 	var RX_EMPTYLINE = /^\s*$/i,
+		
 		RX_IDENTIFIER = /^\s*([^\s]+)\s*=\s*$/i,
 		
 		RX_ASSIGNMENT_TYPE = /^\s*([a-zA-Z_][a-zA-Z0-9]*)\s*=\s*$/i,
@@ -143,6 +150,7 @@ module.exports = (function() {
 		 * @returns {object}          self
 		 */
 		compile: function(text) {
+			var i;
 			// clean identifiers
 			this.identifiers = {};
 			// get lines one by one from text, by splitting it.
@@ -158,7 +166,7 @@ module.exports = (function() {
 			// output size is always $10000, since this is a c64 assembler
 			this.output = new Int8Array(0x10000);
 			
-			var startTime = new Date;
+			var startTime = new Date();
 			// passes 
 			this.pass0();
 			this.pass1();
@@ -166,12 +174,12 @@ module.exports = (function() {
 			this.pass3();
 			this.pass4();
 			
-			var endTime = new Date;
+			var endTime = new Date();
 			
 			var duration = endTime - startTime;
 			var idCount = 0;
 			
-			for (var i in this.identifiers) { idCount++; }
+			for (i in this.identifiers) { idCount++; }
 			
 			this.log("lines:" + this.currentLine + ", identifiers: " + idCount + " compiled in " + duration+"ms.", 1);
 			this.log("done.", 1);

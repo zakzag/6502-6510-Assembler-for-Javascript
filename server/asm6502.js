@@ -1,13 +1,4 @@
-/**
- * usage: 
- * node asm6502.js i:<inputfile> o:<outputfile> t:<outputmode>
- * 
- * @param {string} inputfile        path to the input file
- * @param {string} outputfile       path to output file. will be overwritten
- *                                  if already exists
- * @param {string} outputmode       list of valid values depend on the installed
- *                                  output 
- */
+
 var Compiler = require("./Compiler");
 var Opcode = require("./Opcode");
 var Util = require("./Util");
@@ -25,7 +16,11 @@ var JsonOutput = require("./output/Json");
 var util = require('util');
 
 util.puts("6502/6510 Assember for Node.js V0.1.0\n\n");
-/*
+
+/**
+ * Assembler entry point. This file should be executed when a compilation
+ * is meeded.
+ * 
  * This is the object that holds everything together.
  *
  * ASM is a namespace for all the objects and classes used in this project.
@@ -38,18 +33,69 @@ util.puts("6502/6510 Assember for Node.js V0.1.0\n\n");
  *
  * So far only works with chrome, mozilla, opera and safari, since IE has no attachEvent. 
  * Too lazy to implement cross-browser event handling
+ *
+ * usage: 
+ * node asm6502.js i:<inputfile> o:<outputfile> t:<outputmode>
+ * 
+ * @param {string} inputfile        path to the input file
+ * @param {string} outputfile       path to output file. will be overwritten
+ *                                  if already exists
+ * @param {string} outputmode       list of valid values depend on the installed
+ *                                  output 
+ * @requires {Compiler}
+ * @requires {Opcode}
+ * @requires {Util}
+ * @requires {File}
+ * @requires {TextDirective}
+ * @requires {ByteDirective}
+ * @requires {WordDirective}
+ * @requires {Output}
+ * @requires {RawOutput}
+ * @requires {HumanreadableOutput}
+ * @requires {ProgramOutput}
+ * @requires {JsonOutput}
+ * @requires {util}
+ * 
+ * @object assember
  */
-assembler = (function() {
-	var DEFAULT_CONFIG = {
+var assembler = (function() {
+	"use strict";
+    var DEFAULT_CONFIG = {
 		i: undefined,
 		o: undefined,
 		t: "raw"
 	};
 	
 	return {
+		/**
+		 * Path to the input file
+		 * @public
+		 * @type {string}
+		 */
 		inputFile: undefined,
+		/**
+		 * Path to the output file.
+		 * @public
+		 * @type {string}
+		 */
 		outputFile: undefined,
+		/**
+		 * Content of the input file to be compiled.
+		 * @type {string}
+		 * @public
+		 */
 		inputContent: "",
+		
+		/**
+		 * Initializes the assember by using config. Chainable.
+		 * @param {object} config       Config object used for compiling
+		 * @param {string} config.i     Input file name
+		 * @param {string} config.o     Output file name
+		 * @param {string} config.t     Type of the output. Type must match
+		 *                              one of the installed output types.
+		 * @throws {Error}   
+		 * @returns {object}   Returns self to make it chainable.
+		 */
 		init: function(config) {
 			config = Util.apply({}, config, DEFAULT_CONFIG);
 			
@@ -64,11 +110,11 @@ assembler = (function() {
 			});
 			
 			if(!inputFile) {
-				throw new Error("You must specify an input file")
+				throw new Error("You must specify an input file");
 			}
 			
 			if(!outputFile) {
-				throw new Error("You must specify an output file")
+				throw new Error("You must specify an output file");
 			}
 			
 			this.inputFile = inputFile;
@@ -103,14 +149,19 @@ assembler = (function() {
 			
 			return this;
 		},
-				
+		/**
+		 * Writes the compiled program into a file using the specified output
+		 * type.
+		 * 
+		 * @returns {undefined}
+		 */
 		write: function() {
 			var output = this.compiler.generate(this.type);
 			File.write(this.outputFile, output);
 		},
 		
 		/**
-		 * Occurs when a log event happens in compiler. Prints out message
+		 * Occurs when a log event happens in compiler. Prints out message.
 		 * 
 		 * @param {object} msgData     Message data (message, and loglevel).
 		 * @returns {undefined}
@@ -119,18 +170,33 @@ assembler = (function() {
 			this.log(msgData.message);
 		},
 				
+		/**
+		 * Executed when a fatal error occured during compiling.
+		 * 
+		 * @param {string} msg        Message to be printed
+		 * @throws {Error}
+		 * @returns {undefined}
+		 */
 		onFatalError: function(msg) {
 			throw new Error(msg);
 		},
 
+		/**
+		 * Logs a message to the console. Can accept many arguments as strings
+		 * 
+		 * @param {message} [...] Unlimited amount of messages.
+		 * @returns {object}  Returns self.
+		 */
 		log: function() {
-			for (var i= 0, len = arguments.length; i < len; i++ ) {
+			var i,len ;
+			
+			for (i = 0, len = arguments.length; i < len; i++ ) {
 				console.info(arguments[i]);
 			}
 			return this;
 		}
 	};
-})();
+}());
 
 
 /**
@@ -146,5 +212,5 @@ try {
 	assembler.compile();
 	assembler.write();
 } catch(e) {
-	console.info(e)
+	console.info(e);
 }

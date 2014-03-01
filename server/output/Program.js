@@ -1,6 +1,7 @@
 /**
+ * Output class for rendering executable program
  * 
- * @type ProgramOutputClass   Output class for rendering executable program
+ * @Class ProgramOutputClass   
  * 
  * This class returns a Buffer containing an executable program for emulators
  * (and for C64 as well). 
@@ -11,11 +12,24 @@ var Util = require("../Util");
 var Output = require("../Output");
 
 module.exports = (function() { 
+	"use strict";
 	var ProgramOutputClass = Util.extend(Output, {
+		/**
+		 * @constructor Creates a new ProgramOutputClass object
+		 * 
+		 * @param {Compiler} compiler      Reference to the compiler. Must be set.
+		 * @returns {undefined}
+		 */
 		constructor: function(compiler) {
 			ProgramOutputClass.superclass.constructor.call(this, 'Raw', compiler);
 		},
-
+		/**
+		 * Parses the compiled code into the desired output format.
+		 * 
+		 * @param {object} data     Data to convert.
+		 * @param {string} output   Output string.
+		 * @returns {String}      Output string
+		 */
 		parse: function(data, output) {
 			var addressBuffer = new Buffer(2);
 			addressBuffer.writeUInt16LE(this.compiler.minAddress, 0);
@@ -26,4 +40,4 @@ module.exports = (function() {
 	});
 	
 	return ProgramOutputClass;
-})();
+}());

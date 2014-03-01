@@ -1,4 +1,6 @@
 /**
+ * 
+ * @class Opcode  is a singleton that contains all opcodes, assembler can compile.
  * Possible statements, opcodes, addressing modes etc.
  *
  * A single line consists:
@@ -58,6 +60,13 @@
  */
 module.exports = (function() {
 	return {
+		/**
+		 * Opcode property is a hash map that contains a list of opcodes.
+		 * Each opcode is an array having bytecodes for each addressing modes
+		 * 
+		 * @type {object}
+		 * @public
+		 */
 		Opcode: {
 		/* Name: { IMM,  ZP,   ZPX,  ZPY,  ABS,  ABSX, ABSY, INDX, INDY, IMP,  REL   IND   */
 			ADC: [ 0x69, 0x65, 0x75, 0x00, 0x6d, 0x7d, 0x79, 0x61, 0x71, 0x00, 0x00, 0x00  ],
@@ -117,6 +126,17 @@ module.exports = (function() {
 			PLP: [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00  ]
 		},
 
+		/**
+		 * AddressingMode property is a map containing a descriptor
+		 * for all addressing modes like
+		 *  - shortName
+		 *  - name
+		 *  - length
+		 *  - index
+		 * 
+		 * @public
+		 * @type {object}
+		 */
 		AddressingMode: {
 			IMM: {
 				shortName: "IMM",
